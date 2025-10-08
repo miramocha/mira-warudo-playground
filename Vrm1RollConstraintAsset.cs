@@ -1,5 +1,6 @@
-using Cysharp.Threading.Tasks;
 using System;
+using Cysharp.Threading.Tasks;
+using RootMotion;
 using UnityEngine;
 using UniVRM10;
 using Warudo.Core;
@@ -21,25 +22,24 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class Vrm1RollConstraintAsset : Asset
     {
+        public UniVRM10.Vrm10RollConstraint Constraint;
+
+        // TODO: create abstract class for constraints
+
         [DataInput(0)]
         [Label("ENABLED")]
         public bool Enabled = true;
 
-        [DataInput(1)]
-        public UniGLTF.Extensions.VRMC_node_constraint.RollAxis RollAxis = UniGLTF
-            .Extensions
-            .VRMC_node_constraint
-            .RollAxis
-            .Y;
-
+        [Section("Constraint Parent", 9)]
         [DataInput(10)]
-        public GameObjectAsset Target;
+        public GameObjectAsset Parent;
 
         [DataInput(11)]
-        [Label("Target Transform Path")]
-        [AutoComplete("GetTargetTransforms", true, "ROOT_TRANSFORM")]
-        public string TargetTransformPath;
+        [Label("Parent Transform Path")]
+        [AutoComplete("GetParentTransforms", true, "ROOT_TRANSFORM")]
+        public string ParentTransformPath;
 
+        [Section("Constraint Source", 19)]
         [DataInput(20)]
         public GameObjectAsset Source;
 
@@ -48,38 +48,97 @@ namespace Warudo.Plugins.Scene.Assets
         [AutoComplete("GetSourceTransforms", true, "ROOT_TRANSFORM")]
         public string SourceTransformPath;
 
+        [Section("Constraint Attributes", 29)]
+        [DataInput(30)]
+        public UniGLTF.Extensions.VRMC_node_constraint.RollAxis RollAxis = UniGLTF
+            .Extensions
+            .VRMC_node_constraint
+            .RollAxis
+            .Y;
+
+        [DataInput(31)]
+        [FloatSlider(0, 1)]
+        public float Weight = 1.0f;
 
         [Trigger]
-        [DisabledIf(nameof(ShowCreateConstraintTrigger))]
-        public void CreateConstraint() { }
-
-        protected override void OnCreate()
+        [DisabledIf(nameof(DisableCreateConstraintTrigger))]
+        [HiddenIf(nameof(HideCreateConstraintTrigger))]
+        public void CreateConstraint()
         {
-            base.OnCreate();
-            // Watch<GameObject>(Target, OnTargetChanged);
+            // Assume Parent and Source are not null
+            var parentTransform = Parent.GameObject.transform.Find(ParentTransformPath);
+            var sourceTransform = Source.GameObject.transform.Find(SourceTransformPath);
+
+            if (parentTransform == null)
+            {
+                throw new Exception("parent not found" + ParentTransformPath);
+            }
+
+            if (sourceTransform == null)
+            {
+                throw new Exception("source not found" + SourceTransformPath);
+            }
+
+            parentTransform.gameObject.AddComponent(typeof(Vrm10RollConstraint));
+            Constraint = parentTransform.GetComponent<Vrm10RollConstraint>() as Vrm10RollConstraint;
+
+            Context.Service.PromptMessage("Constraint Added", "Test");
+
+            if (Constraint == null)
+            {
+                throw new Exception("failed to add constraint component");
+            }
+
+            Constraint.Source = sourceTransform;
+            Constraint.RollAxis = RollAxis;
+            Constraint.Weight = Weight;
+
+
+            //      _constraint =
+            // _constraint.Source = sourceTransform;
+            // _constraint.RollAxis = RollAxis;
+            // _constraint.Weight = Weight;
         }
 
-        // protected void OnTargetChanged(GameObject from, GameObject to){
-        //     Context.Service.PromptMessage(from.name, to.name);
-        // }
-
-        public bool ShowCreateConstraintTrigger() {
-            return Target == null || Source == null;
+        [Trigger]
+        [HiddenIf(nameof(HideDeleteConstraintTrigger))]
+        public void DeleteConstraint()
+        {
+            UnityEngine.Object.Destroy(Constraint);
         }
 
-        public async UniTask<AutoCompleteList> GetTargetTransforms()
+        public bool DisableCreateConstraintTrigger()
         {
-            if (Target == null)
+            return Parent == null || Source == null;
+        }
+
+        public bool HideCreateConstraintTrigger()
+        {
+            return Constraint != null;
+        }
+
+        public bool HideDeleteConstraintTrigger()
+        {
+            return Constraint == null;
+        }
+
+        public async UniTask<AutoCompleteList> GetParentTransforms()
+        {
+            if (Parent == null)
             {
                 return AutoCompleteList.Message("PLEASE_SELECT_THE_PARENT_ASSET_FIRST");
             }
 
-            if (!Target.Active)
+            if (!Parent.Active)
             {
                 return AutoCompleteList.Message("SELECTED_PARENT_ASSET_IS_INACTIVE");
             }
 
-            return Transforms.AutoCompleteTransformChildren((Target is CharacterAsset characterAsset) ? characterAsset.MainTransform : Target.GameObject.transform);
+            return Transforms.AutoCompleteTransformChildren(
+                (Parent is CharacterAsset characterAsset)
+                    ? characterAsset.MainTransform
+                    : Parent.GameObject.transform
+            );
         }
 
         public async UniTask<AutoCompleteList> GetSourceTransforms()
@@ -94,7 +153,17 @@ namespace Warudo.Plugins.Scene.Assets
                 return AutoCompleteList.Message("SELECTED_PARENT_ASSET_IS_INACTIVE");
             }
 
-            return Transforms.AutoCompleteTransformChildren((Source is CharacterAsset characterAsset) ? characterAsset.MainTransform : Source.GameObject.transform);
+            return Transforms.AutoCompleteTransformChildren(
+                (Source is CharacterAsset characterAsset)
+                    ? characterAsset.MainTransform
+                    : Source.GameObject.transform
+            );
+        }
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+            SetActive(true);
         }
     }
 }
