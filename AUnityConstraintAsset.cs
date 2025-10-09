@@ -22,10 +22,6 @@ namespace Warudo.Plugins.Scene.Assets
     {
         public IConstraint Constraint;
 
-        // [DataInput(0)]
-        // [Label("ENABLED")]
-        // public bool Enabled = false;
-
         [Section("Constraint Parent", 9)]
         [DataInput(10)]
         public GameObjectAsset Parent;

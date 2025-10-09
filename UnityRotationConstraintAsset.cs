@@ -42,7 +42,6 @@ namespace Warudo.Plugins.Scene.Assets
             rotationConstraint.SetSources(new List<ConstraintSource> { constraintSource });
             rotationConstraint.constraintActive = true;
             rotationConstraint.enabled = true;
-            // Enabled = true;
 
             DebugLog("Rotation at rest:" + rotationConstraint.rotationAtRest.ToString());
             DebugLog("Rotation at rest local:" + ParentRestLocalRotation.ToString());
@@ -51,7 +50,6 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 throw new Exception("failed to add constraint component");
             }
-            // DebugToast("Constraint created.");
         }
     }
 }
