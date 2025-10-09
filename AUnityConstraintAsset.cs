@@ -10,7 +10,9 @@ using Warudo.Core.Data;
 using Warudo.Core.Data.Models;
 using Warudo.Core.Scenes;
 using Warudo.Plugins.Core.Assets;
+using Warudo.Plugins.Core.Assets.Character;
 using Warudo.Plugins.Core.Utils;
+using Axis = UnityEngine.Animations.Axis;
 using IConstraint = UnityEngine.Animations.IConstraint;
 
 namespace Warudo.Plugins.Scene.Assets
@@ -20,9 +22,9 @@ namespace Warudo.Plugins.Scene.Assets
     {
         public IConstraint Constraint;
 
-        [DataInput(0)]
-        [Label("ENABLED")]
-        public bool Enabled = true;
+        // [DataInput(0)]
+        // [Label("ENABLED")]
+        // public bool Enabled = false;
 
         [Section("Constraint Parent", 9)]
         [DataInput(10)]
@@ -30,6 +32,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         [DataInput(11)]
         [Label("Parent Transform Path")]
+        [HiddenIf(nameof(Parent), Is.Null)]
         [AutoComplete("GetParentTransforms", true, "ROOT_TRANSFORM")]
         public string ParentTransformPath;
         public Transform ParentTransform => Parent?.GameObject?.transform.Find(ParentTransformPath);
@@ -42,17 +45,79 @@ namespace Warudo.Plugins.Scene.Assets
 
         [DataInput(121)]
         [Label("Source Transform Path")]
+        [HiddenIf(nameof(Source), Is.Null)]
         [AutoComplete("GetSourceTransforms", true, "ROOT_TRANSFORM")]
         public string SourceTransformPath;
         public Transform SourceTransform => Source?.GameObject?.transform.Find(SourceTransformPath);
         public Vector3 SourceRestLocalPosition;
         public Quaternion SourceRestLocalRotation;
 
-        [DataInput(131)]
-        [FloatSlider(0, 1)]
-        public float Weight = 1.0f;
+        [Section("Freeze Rotation Axes", 200)]
+        [SectionHiddenIf(nameof(HideFreezeRotationAxes))]
+        [DataInput(201)]
+        [Label("X Axis")]
+        public bool FreezeRotationX = true;
 
-        [Section("Constraint Action", 1000)]
+        [DataInput(202)]
+        [Label("Y Axis")]
+        public bool FreezeRotationY = true;
+
+        [DataInput(203)]
+        [Label("Z Axis")]
+        public bool FreezeRotationZ = true;
+        public Axis FreezeRotationAxes
+        {
+            get
+            {
+                Axis axes = Axis.None;
+                if (FreezeRotationX)
+                    axes |= Axis.X;
+                if (FreezeRotationY)
+                    axes |= Axis.Y;
+                if (FreezeRotationZ)
+                    axes |= Axis.Z;
+                return axes;
+            }
+        }
+        public virtual bool HideFreezeRotationAxes()
+        {
+            return true;
+        }
+
+        [Section("Freeze Position Axes", 300)]
+        [SectionHiddenIf(nameof(HideFreezePositionAxes))]
+        [DataInput(301)]
+        [Label("X Axis")]
+        public bool FreezePositionX = true;
+
+        [DataInput(302)]
+        [Label("Y Axis")]
+        public bool FreezePositionY = true;
+
+        [DataInput(303)]
+        [Label("Z Axis")]
+        public bool FreezePositionZ = true;
+        public Axis FreezePositionAxes
+        {
+            get
+            {
+                Axis axes = Axis.None;
+                if (FreezePositionX)
+                    axes |= Axis.X;
+                if (FreezePositionY)
+                    axes |= Axis.Y;
+                if (FreezePositionZ)
+                    axes |= Axis.Z;
+                return axes;
+            }
+        }
+
+        public virtual bool HideFreezePositionAxes()
+        {
+            return true;
+        }
+
+        [Section("Constraint Settings", 1000)]
         [Trigger(1001)]
         [DisabledIf(nameof(DisableCreateConstraintTrigger))]
         [HiddenIf(nameof(HideCreateConstraintTrigger))]
@@ -82,7 +147,66 @@ namespace Warudo.Plugins.Scene.Assets
                 UnityEngine.Object.Destroy((UnityEngine.Object)Constraint);
                 DebugLog("Constraint deleted.");
                 Constraint = null;
+                // SetDataInput(nameof(Enabled), false, broadcast: true);
+
+                // Reset parent and source to their rest positions
+                ResetParent();
+                ResetSource();
             }
+        }
+
+        [DataInput(1003)]
+        [Label("Weight")]
+        [FloatSlider(0, 1)]
+        [HiddenIf(nameof(HideWeight))]
+        public float Weight = 1.0f;
+        public virtual bool HideWeight()
+        {
+            return Constraint == null;
+        }
+
+        public void ResetParent()
+        {
+            if (ParentTransform != null)
+            {
+                ParentTransform.localPosition = ParentRestLocalPosition;
+                ParentTransform.localRotation = ParentRestLocalRotation;
+            }
+        }
+
+        public void ResetSource()
+        {
+            if (SourceTransform != null)
+            {
+                SourceTransform.localPosition = SourceRestLocalPosition;
+                SourceTransform.localRotation = SourceRestLocalRotation;
+            }
+        }
+
+        public void ClearParent()
+        {
+            if (ParentTransform != null)
+            {
+                ParentTransform.localPosition = ParentRestLocalPosition;
+                ParentTransform.localRotation = ParentRestLocalRotation;
+            }
+            SetDataInput(nameof(Parent), null, broadcast: true);
+            SetDataInput(nameof(ParentTransformPath), null, broadcast: true);
+            ParentRestLocalPosition = Vector3.zero;
+            ParentRestLocalRotation = Quaternion.identity;
+        }
+
+        public void ClearSource()
+        {
+            if (SourceTransform != null)
+            {
+                SourceTransform.localPosition = SourceRestLocalPosition;
+                SourceTransform.localRotation = SourceRestLocalRotation;
+            }
+            SetDataInput(nameof(Source), null, broadcast: true);
+            SetDataInput(nameof(SourceTransformPath), null, broadcast: true);
+            SourceRestLocalPosition = Vector3.zero;
+            SourceRestLocalRotation = Quaternion.identity;
         }
 
         public bool DisableCreateConstraintTrigger()
@@ -134,16 +258,16 @@ namespace Warudo.Plugins.Scene.Assets
         {
             base.OnCreate();
             SetActive(true);
-            Watch<bool>(
-                nameof(Enabled),
-                (oldValue, newValue) =>
-                {
-                    if (Constraint != null)
-                    {
-                        Constraint.constraintActive = newValue;
-                    }
-                }
-            );
+            // Watch<bool>(
+            //     nameof(Enabled),
+            //     (oldValue, newValue) =>
+            //     {
+            //         if (Constraint != null)
+            //         {
+            //             Constraint.constraintActive = newValue;
+            //         }
+            //     }
+            // );
             Watch<GameObjectAsset>(nameof(Parent), OnParentChanged);
             Watch<GameObjectAsset>(nameof(Source), OnSourceChanged);
             Watch<String>(nameof(ParentTransformPath), OnParentTransformPathChanged);
@@ -169,7 +293,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected void OnParentChanged(GameObjectAsset oldParent, GameObjectAsset newParent)
         {
-            ParentTransformPath = null;
+            SetDataInput(nameof(ParentTransformPath), null, broadcast: true);
             if (Constraint != null)
             {
                 DeleteConstraint();
@@ -178,7 +302,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected void OnSourceChanged(GameObjectAsset oldSource, GameObjectAsset newSource)
         {
-            SourceTransformPath = null;
+            SetDataInput(nameof(SourceTransformPath), null, broadcast: true);
             if (Constraint != null)
             {
                 DeleteConstraint();
@@ -192,7 +316,64 @@ namespace Warudo.Plugins.Scene.Assets
 
         [Markdown(order: 2503, primary: true)]
         public string ParentTransformHeader = "Parent Transform";
+
         [Markdown(2504)]
         public string ParentTransformInfo = "Parent Transform info will appear here.";
+
+        [Markdown(order: 2505, primary: true)]
+        public string SourceTransformHeader = "Source Transform";
+
+        [Markdown(2506)]
+        public string SourceTransformInfo = "Source Transform info will appear here.";
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            if (ParentTransform != null)
+            {
+                List<String> transformInfoList = new List<String>
+                {
+                    "Name: " + ParentTransform.name,
+                    "Path:" + ParentTransformPath,
+                    "World Position: " + ParentTransform.position.ToString("F3"),
+                    "World Rotation: " + ParentTransform.rotation.eulerAngles.ToString("F3"),
+                    "Local Position: " + ParentTransform.localPosition.ToString("F3"),
+                    "Local Rotation: " + ParentTransform.localRotation.eulerAngles.ToString("F3"),
+                };
+                string newParentTransformInfo = String.Join("<br>", transformInfoList.ToArray());
+                SetDataInput(nameof(ParentTransformInfo), newParentTransformInfo, broadcast: true);
+            }
+            else
+            {
+                SetDataInput(
+                    nameof(ParentTransformInfo),
+                    "Parent Transform info will appear here.",
+                    broadcast: true
+                );
+            }
+
+            if (SourceTransform != null)
+            {
+                List<String> transformInfoList = new List<String>
+                {
+                    "Name: " + SourceTransform.name,
+                    "Path:" + SourceTransformPath,
+                    "World Position: " + SourceTransform.position.ToString("F3"),
+                    "World Rotation: " + SourceTransform.rotation.eulerAngles.ToString("F3"),
+                    "Local Position: " + SourceTransform.localPosition.ToString("F3"),
+                    "Local Rotation: " + SourceTransform.localRotation.eulerAngles.ToString("F3"),
+                };
+                string newSourceTransformInfo = String.Join("<br>", transformInfoList.ToArray());
+                SetDataInput(nameof(SourceTransformInfo), newSourceTransformInfo, broadcast: true);
+            }
+            else
+            {
+                SetDataInput(
+                    nameof(SourceTransformInfo),
+                    "Source Transform info will appear here.",
+                    broadcast: true
+                );
+            }
+        }
     }
 }

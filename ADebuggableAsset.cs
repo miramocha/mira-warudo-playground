@@ -25,6 +25,7 @@ namespace Warudo.Plugins.Scene.Assets
         public bool DebugMode = false;
 
         [Trigger(2002)]
+        [HiddenIf(nameof(DebugMode), Is.False)]
         public void ClearDebugLog()
         {
             debugMessages.Clear();
@@ -32,6 +33,7 @@ namespace Warudo.Plugins.Scene.Assets
         }
 
         [Section("Debug Info", 2500)]
+        [SectionHiddenIf(nameof(DebugMode), Is.False)]
         [Markdown(order: 2501, primary: true)]
         public string DebugLogHeader = "Log Window";
     

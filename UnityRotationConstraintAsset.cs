@@ -22,6 +22,11 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class UnityRotationConstraintAsset : AUnityConstraintAsset
     {
+        public override bool HideFreezeRotationAxes()
+        {
+            return Constraint == null;
+        }
+
         public override void CreateConstraint()
         {
             base.CreateConstraint();
@@ -37,7 +42,7 @@ namespace Warudo.Plugins.Scene.Assets
             rotationConstraint.SetSources(new List<ConstraintSource> { constraintSource });
             rotationConstraint.constraintActive = true;
             rotationConstraint.enabled = true;
-            Enabled = true;
+            // Enabled = true;
 
             DebugLog("Rotation at rest:" + rotationConstraint.rotationAtRest.ToString());
             DebugLog("Rotation at rest local:" + ParentRestLocalRotation.ToString());
