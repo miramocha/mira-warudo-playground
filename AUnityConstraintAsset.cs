@@ -19,9 +19,9 @@ using IConstraint = UnityEngine.Animations.IConstraint;
 
 namespace Warudo.Plugins.Scene.Assets
 {
-    // TODO: refactor to use generics
     public abstract class AUnityConstraintAsset : ADebuggableAsset
     {
+        protected bool Activated = false;
         public IConstraint Constraint;
 
         [Section("Constraint Parent", 9)]
@@ -140,6 +140,7 @@ namespace Warudo.Plugins.Scene.Assets
 
             CreateSpecificConstraint();
             UpdateConstraintDataInputs();
+            Activated = true;
 
             if (Constraint == null)
             {
@@ -314,23 +315,32 @@ namespace Warudo.Plugins.Scene.Assets
             Watch<String>(nameof(ParentTransformPath), OnParentTransformPathChanged);
             Watch<String>(nameof(SourceTransformPath), OnSourceTransformPathChanged);
             Watch<float>(nameof(Weight), OnWeightChanged);
-            Watch<Vector3>(
-                nameof(ConstraintPositionAtRest),
-                OnConstraintPositionAtRestChanged
-            );
+            Watch<Vector3>(nameof(ConstraintPositionAtRest), OnConstraintPositionAtRestChanged);
             Watch<Vector3>(nameof(ConstraintRotationAtRest), OnConstraintRotationAtRestChanged);
+            WatchAll(
+                new string[]
+                {
+                    nameof(FreezePositionX),
+                    nameof(FreezePositionY),
+                    nameof(FreezePositionZ),
+                },
+                OnConstraintFreezePositionAxesChanged
+            );
+            WatchAll(
+                new string[]
+                {
+                    nameof(FreezeRotationX),
+                    nameof(FreezeRotationY),
+                    nameof(FreezeRotationZ),
+                },
+                OnConstraintFreezeRotationAxesChanged
+            );
             WatchAdditionalConstraintInputs();
         }
 
-        protected virtual void WatchAdditionalConstraintInputs()
-        {
-            // for subclasses to override
-        }
+        protected virtual void WatchAdditionalConstraintInputs() { }
 
-        protected virtual void UpdateConstraintDataInputs()
-        {
-            // for subclasses to override
-        }
+        protected virtual void UpdateConstraintDataInputs() { }
 
         protected void OnParentTransformPathChanged(string oldPath, string newPath)
         {
@@ -373,10 +383,11 @@ namespace Warudo.Plugins.Scene.Assets
             Constraint.weight = newWeight;
         }
 
-        protected virtual void OnConstraintPositionAtRestChanged(
-            Vector3 oldPos,
-            Vector3 newPos
-        ) { }
+        protected virtual void OnConstraintFreezeRotationAxesChanged() { }
+
+        protected virtual void OnConstraintFreezePositionAxesChanged() { }
+
+        protected virtual void OnConstraintPositionAtRestChanged(Vector3 oldPos, Vector3 newPos) { }
 
         protected virtual void OnConstraintRotationAtRestChanged(
             Vector3 oldValue,
@@ -414,7 +425,7 @@ namespace Warudo.Plugins.Scene.Assets
                 List<String> transformInfoList = new List<String>
                 {
                     "Name: " + ParentTransform.name,
-                    "Path:" + ParentTransformPath,
+                    "Path: " + ParentTransformPath,
                     "World Position: " + ParentTransform.position.ToString("F3"),
                     "World Rotation: " + ParentTransform.rotation.eulerAngles.ToString("F3"),
                     "Local Position: " + ParentTransform.localPosition.ToString("F3"),
@@ -437,7 +448,7 @@ namespace Warudo.Plugins.Scene.Assets
                 List<String> transformInfoLines = new List<String>
                 {
                     "Name: " + SourceTransform.name,
-                    "Path:" + SourceTransformPath,
+                    "Path: " + SourceTransformPath,
                     "World Position: " + SourceTransform.position.ToString("F3"),
                     "World Rotation: " + SourceTransform.rotation.eulerAngles.ToString("F3"),
                     "Local Position: " + SourceTransform.localPosition.ToString("F3"),

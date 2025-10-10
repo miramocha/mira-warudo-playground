@@ -10,6 +10,7 @@ using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Assets.Character;
 using Warudo.Plugins.Core.Assets.Mixins;
 using Warudo.Plugins.Core.Utils;
+using Axis = UnityEngine.Animations.Axis;
 using ConstraintSource = UnityEngine.Animations.ConstraintSource;
 using ParentConstraint = UnityEngine.Animations.ParentConstraint;
 
@@ -68,6 +69,20 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
+        protected override void OnConstraintFreezePositionAxesChanged()
+        {
+            ParentConstraint parentConstraint = (ParentConstraint)Constraint;
+            parentConstraint.translationAxis = FreezePositionAxes;
+            DebugLog("Set position axis to: " + FreezePositionAxes.ToString());
+        }
+
+        protected override void OnConstraintFreezeRotationAxesChanged()
+        {
+            ParentConstraint parentConstraint = (ParentConstraint)Constraint;
+            parentConstraint.rotationAxis = FreezeRotationAxes;
+            DebugLog("Set rotation axis to: " + FreezeRotationAxes.ToString());
+        }
+
         protected override void CreateSpecificConstraint()
         {
             ConstraintSource constraintSource = new ConstraintSource();
@@ -103,7 +118,39 @@ namespace Warudo.Plugins.Scene.Assets
                 broadcast: true
             );
 
-            DebugLog("Position Axis: " + parentConstraint.ToString());
+            Axis constraintFreezePositionAxes = parentConstraint.translationAxis;
+            SetDataInput(
+                nameof(FreezePositionX),
+                constraintFreezePositionAxes.HasFlag(Axis.X),
+                broadcast: true
+            );
+            SetDataInput(
+                nameof(FreezePositionY),
+                constraintFreezePositionAxes.HasFlag(Axis.Y),
+                broadcast: true
+            );
+            SetDataInput(
+                nameof(FreezePositionZ),
+                constraintFreezePositionAxes.HasFlag(Axis.Z),
+                broadcast: true
+            );
+
+            Axis constraintFreezeRotationAxes = parentConstraint.rotationAxis;
+            SetDataInput(
+                nameof(FreezeRotationX),
+                constraintFreezeRotationAxes.HasFlag(Axis.X),
+                broadcast: true
+            );
+            SetDataInput(
+                nameof(FreezeRotationY),
+                constraintFreezeRotationAxes.HasFlag(Axis.Y),
+                broadcast: true
+            );
+            SetDataInput(
+                nameof(FreezeRotationZ),
+                constraintFreezeRotationAxes.HasFlag(Axis.Z),
+                broadcast: true
+            );
         }
 
         protected override void UpdateConstraintDebugInfo()
@@ -121,6 +168,8 @@ namespace Warudo.Plugins.Scene.Assets
                     "Position At Rest: " + parentConstraint.translationAtRest.ToString(),
                     "Rotation At Rest: " + parentConstraint.rotationAtRest.ToString(),
                     "Locked: " + parentConstraint.locked,
+                    "Axes Frozen (Position): " + parentConstraint.translationAxis.ToString(),
+                    "Axes Frozen (Rotation): " + parentConstraint.rotationAxis.ToString(),
                 };
                 string newConstraintInfo = String.Join("<br>", constraintInfoLines);
                 SetDataInput(nameof(ConstraintInfo), newConstraintInfo, broadcast: true);
