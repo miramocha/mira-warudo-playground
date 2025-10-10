@@ -27,9 +27,8 @@ namespace Warudo.Plugins.Scene.Assets
             return Constraint == null;
         }
 
-        public override void CreateConstraint()
+        protected override void CreateSpecificConstraint()
         {
-            base.CreateConstraint();
             ConstraintSource constraintSource = new ConstraintSource();
             constraintSource.sourceTransform = SourceTransform;
             constraintSource.weight = Weight;
@@ -45,11 +44,6 @@ namespace Warudo.Plugins.Scene.Assets
 
             DebugLog("Rotation at rest:" + rotationConstraint.rotationAtRest.ToString());
             DebugLog("Rotation at rest local:" + ParentRestLocalRotation.ToString());
-
-            if (Constraint == null)
-            {
-                throw new Exception("failed to add constraint component");
-            }
         }
     }
 }

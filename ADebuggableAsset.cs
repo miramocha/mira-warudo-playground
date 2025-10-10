@@ -16,7 +16,6 @@ namespace Warudo.Plugins.Scene.Assets
 {
     public abstract class ADebuggableAsset : Asset
     {
-
         private const string DEFAULT_DEBUG_MESSAGE = "Debug messages will appear here.";
 
         [Section("Debug", 2000)]
@@ -36,7 +35,7 @@ namespace Warudo.Plugins.Scene.Assets
         [SectionHiddenIf(nameof(DebugMode), Is.False)]
         [Markdown(order: 2501, primary: true)]
         public string DebugLogHeader = "Log Window";
-    
+
         [Markdown(2502)]
         public string DebugMessage = DEFAULT_DEBUG_MESSAGE;
 

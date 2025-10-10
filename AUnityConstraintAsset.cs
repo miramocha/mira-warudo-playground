@@ -1,8 +1,8 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Warudo.Core;
 using Warudo.Core.Attributes;
@@ -11,8 +11,10 @@ using Warudo.Core.Data.Models;
 using Warudo.Core.Scenes;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Assets.Character;
+using Warudo.Plugins.Core.Assets.Mixins;
 using Warudo.Plugins.Core.Utils;
 using Axis = UnityEngine.Animations.Axis;
+using Description = Warudo.Core.Attributes.DescriptionAttribute;
 using IConstraint = UnityEngine.Animations.IConstraint;
 
 namespace Warudo.Plugins.Scene.Assets
@@ -24,6 +26,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         [Section("Constraint Parent", 9)]
         [DataInput(10)]
+        [Description("The parent GameObject to apply the constraint to.")]
         public GameObjectAsset Parent;
 
         [DataInput(11)]
@@ -37,6 +40,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         [Section("Constraint Source", 119)]
         [DataInput(20)]
+        [Description("The source GameObject to drive the constraint.")]
         public GameObjectAsset Source;
 
         [DataInput(121)]
@@ -75,6 +79,7 @@ namespace Warudo.Plugins.Scene.Assets
                 return axes;
             }
         }
+
         public virtual bool HideFreezeRotationAxes()
         {
             return true;
@@ -117,7 +122,7 @@ namespace Warudo.Plugins.Scene.Assets
         [Trigger(1001)]
         [DisabledIf(nameof(DisableCreateConstraintTrigger))]
         [HiddenIf(nameof(HideCreateConstraintTrigger))]
-        public virtual void CreateConstraint()
+        public void CreateConstraint()
         {
             if (ParentTransform == null)
             {
@@ -132,6 +137,18 @@ namespace Warudo.Plugins.Scene.Assets
             }
             SourceRestLocalPosition = SourceTransform.localPosition;
             SourceRestLocalRotation = SourceTransform.localRotation;
+
+            CreateSpecificConstraint();
+
+            if (Constraint == null)
+            {
+                throw new Exception("failed to add constraint component");
+            }
+        }
+
+        protected virtual void CreateSpecificConstraint()
+        {
+            throw new NotImplementedException();
         }
 
         [Trigger(1002)]
@@ -143,7 +160,6 @@ namespace Warudo.Plugins.Scene.Assets
                 UnityEngine.Object.Destroy((UnityEngine.Object)Constraint);
                 DebugLog("Constraint deleted.");
                 Constraint = null;
-                // SetDataInput(nameof(Enabled), false, broadcast: true);
 
                 // Reset parent and source to their rest positions
                 ResetParent();
@@ -156,6 +172,7 @@ namespace Warudo.Plugins.Scene.Assets
         [FloatSlider(0, 1)]
         [HiddenIf(nameof(HideWeight))]
         public float Weight = 1.0f;
+
         public virtual bool HideWeight()
         {
             return Constraint == null;
@@ -250,20 +267,26 @@ namespace Warudo.Plugins.Scene.Assets
             return Transforms.AutoCompleteTransformChildren(Source.GameObject.transform);
         }
 
+        protected virtual void ReloadConstraint()
+        {
+            if (Constraint != null)
+            {
+                DeleteConstraint();
+            }
+
+            CreateConstraint();
+        }
+
         protected override void OnCreate()
         {
             base.OnCreate();
             SetActive(true);
-            // Watch<bool>(
-            //     nameof(Enabled),
-            //     (oldValue, newValue) =>
-            //     {
-            //         if (Constraint != null)
-            //         {
-            //             Constraint.constraintActive = newValue;
-            //         }
-            //     }
-            // );
+            // ReloadConstraint();
+
+            if(Parent == null) DebugLog("Parent is null");
+            if(Source == null) DebugLog("Source is null");
+            if(Constraint == null) DebugLog("Constraint is null");
+
             Watch<GameObjectAsset>(nameof(Parent), OnParentChanged);
             Watch<GameObjectAsset>(nameof(Source), OnSourceChanged);
             Watch<String>(nameof(ParentTransformPath), OnParentTransformPathChanged);
@@ -310,21 +333,32 @@ namespace Warudo.Plugins.Scene.Assets
             Constraint.weight = newWeight;
         }
 
+        protected const string DEFAULT_PARENT_TRANSFORM_INFO =
+            "Parent Transform info will appear here.";
+        protected const string DEFAULT_SOURCE_TRANSFORM_INFO =
+            "Source Transform info will appear here.";
+        protected const string DEFAULT_CONSTRAINT_INFO = "Constraint info will appear here.";
+
         [Markdown(order: 2503, primary: true)]
         public string ParentTransformHeader = "Parent Transform";
 
         [Markdown(2504)]
-        public string ParentTransformInfo = "Parent Transform info will appear here.";
+        public string ParentTransformInfo = DEFAULT_PARENT_TRANSFORM_INFO;
 
         [Markdown(order: 2505, primary: true)]
         public string SourceTransformHeader = "Source Transform";
 
         [Markdown(2506)]
-        public string SourceTransformInfo = "Source Transform info will appear here.";
+        public string SourceTransformInfo = DEFAULT_SOURCE_TRANSFORM_INFO;
 
-        public override void OnUpdate()
+        [Markdown(order: 2507, primary: true)]
+        public string ConstraintInfoHeader = "Constraint Info";
+
+        [Markdown(2508)]
+        public string ConstraintInfo = DEFAULT_CONSTRAINT_INFO;
+
+        public virtual void UpdateConstraintDebugInfo()
         {
-            base.OnUpdate();
             if (ParentTransform != null)
             {
                 List<String> transformInfoList = new List<String>
@@ -343,14 +377,14 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 SetDataInput(
                     nameof(ParentTransformInfo),
-                    "Parent Transform info will appear here.",
+                    DEFAULT_PARENT_TRANSFORM_INFO,
                     broadcast: true
                 );
             }
 
             if (SourceTransform != null)
             {
-                List<String> transformInfoList = new List<String>
+                List<String> transformInfoLines = new List<String>
                 {
                     "Name: " + SourceTransform.name,
                     "Path:" + SourceTransformPath,
@@ -359,16 +393,25 @@ namespace Warudo.Plugins.Scene.Assets
                     "Local Position: " + SourceTransform.localPosition.ToString("F3"),
                     "Local Rotation: " + SourceTransform.localRotation.eulerAngles.ToString("F3"),
                 };
-                string newSourceTransformInfo = String.Join("<br>", transformInfoList.ToArray());
+                string newSourceTransformInfo = String.Join("<br>", transformInfoLines.ToArray());
                 SetDataInput(nameof(SourceTransformInfo), newSourceTransformInfo, broadcast: true);
             }
             else
             {
                 SetDataInput(
                     nameof(SourceTransformInfo),
-                    "Source Transform info will appear here.",
+                    DEFAULT_SOURCE_TRANSFORM_INFO,
                     broadcast: true
                 );
+            }
+        }
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            if (DebugMode)
+            {
+                UpdateConstraintDebugInfo();
             }
         }
     }
