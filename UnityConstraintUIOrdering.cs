@@ -36,6 +36,15 @@ namespace Warudo.Plugins.Scene.Assets
             // Debug Info
             DEBUG_INFO_SECTION = 2500,
             DEBUG_LOG_HEADER = 2501,
-            DEBUG_LOG_MESSAGE = 2502;
+            DEBUG_LOG_MESSAGE = 2502,
+            // Parent Info
+            DEBUG_PARENT_TRANSFORM_HEADER = 3000,
+            DEBUG_PARENT_TRANSFORM_INFO = 3001,
+            // Source Info
+            DEBUG_SOURCE_TRANSFORM_HEADER = 3100,
+            DEBUG_SOURCE_TRANSFORM_INFO = 3101,
+            // Constraint Info
+            DEBUG_CONSTRAINT_INFO_HEADER = 3200,
+            DEBUG_CONSTRAINT_INFO = 3201;
     }
 }

@@ -43,16 +43,16 @@ namespace Warudo.Plugins.Scene.Assets
 
         public void DebugToast(string msg)
         {
-            if (!DebugMode)
-                return;
+            // if (!DebugMode)
+            //     return;
 
             Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", msg);
         }
 
         public void DebugLog(string msg)
         {
-            if (!DebugMode)
-                return;
+            // if (!DebugMode)
+            //     return;
 
             debugMessages.Add(msg);
             SetDataInput(

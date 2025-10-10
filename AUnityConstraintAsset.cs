@@ -13,6 +13,7 @@ using Warudo.Core.Utils;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Assets.Character;
 using Warudo.Plugins.Core.Assets.Mixins;
+using Warudo.Plugins.Core.Nodes;
 using Warudo.Plugins.Core.Utils;
 using Axis = UnityEngine.Animations.Axis;
 using Description = Warudo.Core.Attributes.DescriptionAttribute;
@@ -22,7 +23,12 @@ namespace Warudo.Plugins.Scene.Assets
 {
     public abstract class AUnityConstraintAsset : ADebuggableAsset
     {
-        protected bool Activated = false;
+        // TODO: Fix constraint autoload on startup even when it wasn't saved
+        // [DataInput(-1000)]
+        protected bool ConstraintSaved = false;
+
+        // [DataInput(-1001)]
+        protected bool ConstraintLoaded = false;
         public IConstraint Constraint;
 
         [Section("Constraint Parent", UnityConstraintUIOrdering.PARENT_SECTION)]
@@ -83,7 +89,7 @@ namespace Warudo.Plugins.Scene.Assets
                 UpdateConstraintDataInputs();
             }
 
-            Activated = true;
+            ConstraintLoaded = true;
 
             if (Constraint == null)
             {
@@ -318,24 +324,23 @@ namespace Warudo.Plugins.Scene.Assets
             return Transforms.AutoCompleteTransformChildren(Source.GameObject.transform);
         }
 
-        protected virtual void ReloadConstraint()
-        {
-            DeleteConstraint();
-            CreateConstraint();
-        }
-
         protected override void OnCreate()
         {
             base.OnCreate();
             SetActive(true);
-            // ReloadConstraint();
+            DebugLog("Constraint asset created.");
 
-            if (Parent == null)
-                DebugLog("Parent is null");
-            if (Source == null)
-                DebugLog("Source is null");
-            if (Constraint == null)
-                DebugLog("Constraint is null");
+            if (ConstraintSaved)
+            {
+                DebugLog("Constraint was previously saved.");
+            }
+
+            if (Parent != null)
+                DebugLog("Parent is not null.");
+            if (Source != null)
+                DebugLog("Source is not null.");
+            if (Constraint != null)
+                DebugLog("Constraint is not null.");
 
             Watch<GameObjectAsset>(nameof(Parent), OnParentChanged);
             Watch<GameObjectAsset>(nameof(Source), OnSourceChanged);
@@ -363,6 +368,8 @@ namespace Warudo.Plugins.Scene.Assets
                 OnConstraintFreezeRotationAxesChanged
             );
             WatchAdditionalConstraintInputs();
+            DebugLog("Input watchers set.");
+            // ReloadConstraint();
         }
 
         protected virtual void WatchAdditionalConstraintInputs() { }
@@ -371,7 +378,22 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected void OnParentTransformPathChanged(string oldPath, string newPath)
         {
-            if (Constraint != null)
+            DebugLog($"Parent transform path changed from {oldPath} to {newPath}");
+
+            if (!ConstraintLoaded)
+            {
+                DebugLog("Attempting to load.");
+                try
+                {
+                    CreateConstraint();
+                }
+                catch (Exception e)
+                {
+                    DebugLog("Failed to create constraint: " + e.Message);
+                }
+                // }
+            }
+            else
             {
                 DeleteConstraint();
             }
@@ -379,7 +401,22 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected void OnSourceTransformPathChanged(string oldPath, string newPath)
         {
-            if (Constraint != null)
+            DebugLog($"Source transform path changed from {oldPath} to {newPath}");
+
+            if (!ConstraintLoaded)
+            {
+                DebugLog("Constraint not loaded.");
+                DebugLog("Attempting to load.");
+                try
+                {
+                    CreateConstraint();
+                }
+                catch (Exception e)
+                {
+                    DebugLog("Failed to create constraint: " + e.Message);
+                }
+            }
+            else
             {
                 DeleteConstraint();
             }
@@ -389,20 +426,26 @@ namespace Warudo.Plugins.Scene.Assets
         {
             DebugLog($"Parent changed from {oldParent?.Name} to {newParent?.Name}");
             SetDataInput(nameof(ParentTransformPath), null, broadcast: true);
-            if (Constraint != null)
+
+            if (ConstraintLoaded)
             {
-                DeleteConstraint();
+                Debug.Log("Constraint was initialized, resetting.");
             }
+
+            DeleteConstraint();
         }
 
         protected void OnSourceChanged(GameObjectAsset oldSource, GameObjectAsset newSource)
         {
             DebugLog($"Source changed from {oldSource?.Name} to {newSource?.Name}");
             SetDataInput(nameof(SourceTransformPath), null, broadcast: true);
-            if (Constraint != null)
+
+            if (ConstraintLoaded)
             {
-                DeleteConstraint();
+                Debug.Log("Constraint was initialized, resetting.");
             }
+
+            DeleteConstraint();
         }
 
         protected void OnWeightChanged(float oldWeight, float newWeight)
@@ -421,29 +464,25 @@ namespace Warudo.Plugins.Scene.Assets
             Vector3 newValue
         ) { }
 
-        protected const string DEFAULT_PARENT_TRANSFORM_INFO =
-            "Parent Transform info will appear here.";
-        protected const string DEFAULT_SOURCE_TRANSFORM_INFO =
-            "Source Transform info will appear here.";
-        protected const string DEFAULT_CONSTRAINT_INFO = "Constraint info will appear here.";
-
-        [Markdown(order: 2503, primary: true)]
+        [Markdown(order: UnityConstraintUIOrdering.DEBUG_PARENT_TRANSFORM_HEADER, primary: true)]
         public string ParentTransformHeader = "Parent Transform";
 
-        [Markdown(2504)]
-        public string ParentTransformInfo = DEFAULT_PARENT_TRANSFORM_INFO;
+        [Markdown(UnityConstraintUIOrdering.DEBUG_PARENT_TRANSFORM_INFO)]
+        public string ParentTransformInfo =
+            UnityConstraintUIMessaging.DEBUG_DEFAULT_PARENT_TRANSFORM_INFO;
 
-        [Markdown(order: 2505, primary: true)]
+        [Markdown(order: UnityConstraintUIOrdering.DEBUG_SOURCE_TRANSFORM_HEADER, primary: true)]
         public string SourceTransformHeader = "Source Transform";
 
-        [Markdown(2506)]
-        public string SourceTransformInfo = DEFAULT_SOURCE_TRANSFORM_INFO;
+        [Markdown(UnityConstraintUIOrdering.DEBUG_SOURCE_TRANSFORM_INFO)]
+        public string SourceTransformInfo =
+            UnityConstraintUIMessaging.DEBUG_DEFAULT_SOURCE_TRANSFORM_INFO;
 
-        [Markdown(order: 2507, primary: true)]
+        [Markdown(order: UnityConstraintUIOrdering.DEBUG_CONSTRAINT_INFO_HEADER, primary: true)]
         public string ConstraintInfoHeader = "Constraint Info";
 
-        [Markdown(2508)]
-        public string ConstraintInfo = DEFAULT_CONSTRAINT_INFO;
+        [Markdown(UnityConstraintUIOrdering.DEBUG_CONSTRAINT_INFO)]
+        public string ConstraintInfo = UnityConstraintUIMessaging.DEBUG_DEFAULT_CONSTRAINT_INFO;
 
         protected virtual void UpdateConstraintDebugInfo()
         {
@@ -465,7 +504,7 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 SetDataInput(
                     nameof(ParentTransformInfo),
-                    DEFAULT_PARENT_TRANSFORM_INFO,
+                    UnityConstraintUIMessaging.DEBUG_DEFAULT_PARENT_TRANSFORM_INFO,
                     broadcast: true
                 );
             }
@@ -488,7 +527,7 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 SetDataInput(
                     nameof(SourceTransformInfo),
-                    DEFAULT_SOURCE_TRANSFORM_INFO,
+                    UnityConstraintUIMessaging.DEBUG_DEFAULT_SOURCE_TRANSFORM_INFO,
                     broadcast: true
                 );
             }
@@ -505,6 +544,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected override void OnDestroy()
         {
+            ConstraintLoaded = false;
             DebugMode = false;
             DeleteConstraint();
             base.Destroy();

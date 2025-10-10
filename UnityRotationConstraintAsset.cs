@@ -172,7 +172,11 @@ namespace Warudo.Plugins.Scene.Assets
             }
             else
             {
-                SetDataInput(nameof(ConstraintInfo), "No Constraint", broadcast: true);
+                SetDataInput(
+                    nameof(ConstraintInfo),
+                    UnityConstraintUIMessaging.DEBUG_DEFAULT_CONSTRAINT_INFO,
+                    broadcast: true
+                );
             }
         }
     }
