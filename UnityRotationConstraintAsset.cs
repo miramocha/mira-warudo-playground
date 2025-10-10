@@ -28,6 +28,24 @@ namespace Warudo.Plugins.Scene.Assets
         [HiddenIf(nameof(HideRotationOffset))]
         public Vector3 ConstraintRotationOffset = Vector3.zero;
 
+        [Trigger(1022)]
+        [Label("Reset Rotation Offset")]
+        [HiddenIf(nameof(HideRotationOffset))]
+        public void ResetConstraintRotationOffset()
+        {
+            Vector3 offset =
+                ParentRestLocalRotation.eulerAngles - ParentTransform.localRotation.eulerAngles;
+            DebugLog(
+                "ParentTransform rotation: " + ParentTransform.localRotation.eulerAngles.ToString()
+            );
+            DebugLog("ParentRestLocalRotation: " + ParentRestLocalRotation.eulerAngles.ToString());
+            DebugLog("Initial rotation offset set to: " + offset.ToString());
+            SetDataInput(nameof(ConstraintRotationOffset), offset, broadcast: true);
+
+            RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
+            rotationConstraint.rotationOffset = offset;
+        }
+
         protected override bool HideFreezeRotationAxes()
         {
             return Constraint == null;

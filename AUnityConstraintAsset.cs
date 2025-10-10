@@ -53,72 +53,6 @@ namespace Warudo.Plugins.Scene.Assets
         public Vector3 SourceRestLocalPosition;
         public Quaternion SourceRestLocalRotation;
 
-        [Section("Freeze Rotation Axes", 200)]
-        [SectionHiddenIf(nameof(HideFreezeRotationAxes))]
-        [DataInput(201)]
-        [Label("X Axis")]
-        public bool FreezeRotationX = true;
-
-        [DataInput(202)]
-        [Label("Y Axis")]
-        public bool FreezeRotationY = true;
-
-        [DataInput(203)]
-        [Label("Z Axis")]
-        public bool FreezeRotationZ = true;
-        public Axis FreezeRotationAxes
-        {
-            get
-            {
-                Axis axes = Axis.None;
-                if (FreezeRotationX)
-                    axes |= Axis.X;
-                if (FreezeRotationY)
-                    axes |= Axis.Y;
-                if (FreezeRotationZ)
-                    axes |= Axis.Z;
-                return axes;
-            }
-        }
-
-        protected virtual bool HideFreezeRotationAxes()
-        {
-            return true;
-        }
-
-        [Section("Freeze Position Axes", 300)]
-        [SectionHiddenIf(nameof(HideFreezePositionAxes))]
-        [DataInput(301)]
-        [Label("X Axis")]
-        public bool FreezePositionX = true;
-
-        [DataInput(302)]
-        [Label("Y Axis")]
-        public bool FreezePositionY = true;
-
-        [DataInput(303)]
-        [Label("Z Axis")]
-        public bool FreezePositionZ = true;
-        public Axis FreezePositionAxes
-        {
-            get
-            {
-                Axis axes = Axis.None;
-                if (FreezePositionX)
-                    axes |= Axis.X;
-                if (FreezePositionY)
-                    axes |= Axis.Y;
-                if (FreezePositionZ)
-                    axes |= Axis.Z;
-                return axes;
-            }
-        }
-
-        protected virtual bool HideFreezePositionAxes()
-        {
-            return true;
-        }
-
         [Section("Constraint Settings", 1000)]
         [Trigger(1001)]
         [DisabledIf(nameof(DisableCreateConstraintTrigger))]
@@ -140,7 +74,15 @@ namespace Warudo.Plugins.Scene.Assets
             SourceRestLocalRotation = SourceTransform.localRotation;
 
             CreateSpecificConstraint();
-            UpdateConstraintDataInputs();
+            if (Locked)
+            {
+                ApplyLockedConstraintSettings();
+            }
+            else
+            {
+                UpdateConstraintDataInputs();
+            }
+
             Activated = true;
 
             if (Constraint == null)
@@ -149,12 +91,21 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
+        [DataInput(1002)]
+        [Label("Lock")]
+        public bool Locked = false;
+
         protected virtual void CreateSpecificConstraint()
         {
             throw new NotImplementedException();
         }
 
-        [Trigger(1002)]
+        protected virtual void ApplyLockedConstraintSettings()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Trigger(1011)]
         [HiddenIf(nameof(HideDeleteConstraintTrigger))]
         public virtual void DeleteConstraint()
         {
@@ -174,17 +125,92 @@ namespace Warudo.Plugins.Scene.Assets
         [Label("Weight")]
         [FloatSlider(0, 1)]
         [HiddenIf(nameof(HideWeight))]
+        [DisabledIf(nameof(Locked), Is.True)]
         public float Weight = 1.0f;
 
         [DataInput(1010)]
         [Label("Position At Rest")]
         [HiddenIf(nameof(HidePositionAtRest))]
+        [DisabledIf(nameof(Locked), Is.True)]
         public Vector3 ConstraintPositionAtRest = Vector3.zero;
 
         [DataInput(1020)]
         [Label("Rotation At Rest")]
         [HiddenIf(nameof(HideRotationAtRest))]
+        [DisabledIf(nameof(Locked), Is.True)]
         public Vector3 ConstraintRotationAtRest = Vector3.zero;
+
+        [Section("Freeze Rotation Axes", 1100)]
+        [SectionHiddenIf(nameof(HideFreezeRotationAxes))]
+        [DataInput(1101)]
+        [Label("X Axis")]
+        [DisabledIf(nameof(Locked), Is.True)]
+        public bool FreezeRotationX = true;
+
+        [DataInput(1102)]
+        [Label("Y Axis")]
+        [DisabledIf(nameof(Locked), Is.True)]
+        public bool FreezeRotationY = true;
+
+        [DataInput(1103)]
+        [Label("Z Axis")]
+        [DisabledIf(nameof(Locked), Is.True)]
+        public bool FreezeRotationZ = true;
+        public Axis FreezeRotationAxes
+        {
+            get
+            {
+                Axis axes = Axis.None;
+                if (FreezeRotationX)
+                    axes |= Axis.X;
+                if (FreezeRotationY)
+                    axes |= Axis.Y;
+                if (FreezeRotationZ)
+                    axes |= Axis.Z;
+                return axes;
+            }
+        }
+
+        protected virtual bool HideFreezeRotationAxes()
+        {
+            return true;
+        }
+
+        [Section("Freeze Position Axes", 1200)]
+        [SectionHiddenIf(nameof(HideFreezePositionAxes))]
+        [DataInput(1201)]
+        [Label("X Axis")]
+        [DisabledIf(nameof(Locked), Is.True)]
+        public bool FreezePositionX = true;
+
+        [DataInput(1202)]
+        [Label("Y Axis")]
+        [DisabledIf(nameof(Locked), Is.True)]
+        public bool FreezePositionY = true;
+
+        [DataInput(1203)]
+        [Label("Z Axis")]
+        [DisabledIf(nameof(Locked), Is.True)]
+        public bool FreezePositionZ = true;
+        public Axis FreezePositionAxes
+        {
+            get
+            {
+                Axis axes = Axis.None;
+                if (FreezePositionX)
+                    axes |= Axis.X;
+                if (FreezePositionY)
+                    axes |= Axis.Y;
+                if (FreezePositionZ)
+                    axes |= Axis.Z;
+                return axes;
+            }
+        }
+
+        protected virtual bool HideFreezePositionAxes()
+        {
+            return true;
+        }
 
         protected virtual bool HideWeight()
         {

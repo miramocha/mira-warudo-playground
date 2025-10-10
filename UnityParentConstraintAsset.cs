@@ -23,24 +23,26 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class UnityParentConstraintAsset : AUnityConstraintAsset
     {
+        // TODO: Add position and rotation offset support
+
         protected override bool HideFreezeRotationAxes()
         {
-            return Constraint == null;
+            return false;
         }
 
         protected override bool HideFreezePositionAxes()
         {
-            return Constraint == null;
+            return false;
         }
 
         protected override bool HidePositionAtRest()
         {
-            return Constraint == null;
+            return false;
         }
 
         protected override bool HideRotationAtRest()
         {
-            return Constraint == null;
+            return false;
         }
 
         protected override void OnConstraintPositionAtRestChanged(
@@ -98,6 +100,19 @@ namespace Warudo.Plugins.Scene.Assets
 
             DebugLog("Rotation at rest local:" + ParentRestLocalRotation.ToString());
             DebugLog("Position at rest local:" + ParentRestLocalPosition.ToString());
+        }
+
+        protected override void ApplyLockedConstraintSettings()
+        {
+            if (Constraint != null)
+            {
+                ParentConstraint parentConstraint = (ParentConstraint)Constraint;
+                parentConstraint.weight = Weight;
+                parentConstraint.translationAtRest = ConstraintPositionAtRest;
+                parentConstraint.rotationAtRest = ConstraintRotationAtRest;
+                parentConstraint.rotationAxis = FreezePositionAxes;
+                parentConstraint.translationAxis = FreezeRotationAxes;
+            }
         }
 
         protected override void WatchAdditionalConstraintInputs() { }
