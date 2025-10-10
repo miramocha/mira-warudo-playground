@@ -9,6 +9,7 @@ using Warudo.Core.Attributes;
 using Warudo.Core.Data;
 using Warudo.Core.Data.Models;
 using Warudo.Core.Scenes;
+using Warudo.Core.Utils;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Assets.Character;
 using Warudo.Plugins.Core.Assets.Mixins;
@@ -175,12 +176,12 @@ namespace Warudo.Plugins.Scene.Assets
         [HiddenIf(nameof(HideWeight))]
         public float Weight = 1.0f;
 
-        [DataInput(1004)]
+        [DataInput(1010)]
         [Label("Position At Rest")]
         [HiddenIf(nameof(HidePositionAtRest))]
         public Vector3 ConstraintPositionAtRest = Vector3.zero;
 
-        [DataInput(1005)]
+        [DataInput(1020)]
         [Label("Rotation At Rest")]
         [HiddenIf(nameof(HideRotationAtRest))]
         public Vector3 ConstraintRotationAtRest = Vector3.zero;
@@ -478,8 +479,9 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected override void OnDestroy()
         {
-            base.OnDestroy();
+            DebugMode = false;
             DeleteConstraint();
+            base.Destroy();
         }
     }
 }

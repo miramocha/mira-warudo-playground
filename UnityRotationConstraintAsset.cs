@@ -23,6 +23,11 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class UnityRotationConstraintAsset : AUnityConstraintAsset
     {
+        [DataInput(1021)]
+        [Label("Rotation Offset")]
+        [HiddenIf(nameof(HideRotationOffset))]
+        public Vector3 ConstraintRotationOffset = Vector3.zero;
+
         protected override bool HideFreezeRotationAxes()
         {
             return Constraint == null;
@@ -31,6 +36,16 @@ namespace Warudo.Plugins.Scene.Assets
         protected override bool HideRotationAtRest()
         {
             return Constraint == null;
+        }
+
+        protected bool HideRotationOffset()
+        {
+            return Constraint == null;
+        }
+
+        protected override void WatchAdditionalConstraintInputs()
+        {
+            Watch<Vector3>(nameof(ConstraintRotationOffset), OnConstraintRotationOffsetChanged);
         }
 
         protected override void OnConstraintRotationAtRestChanged(
@@ -43,6 +58,16 @@ namespace Warudo.Plugins.Scene.Assets
                 RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
                 rotationConstraint.rotationAtRest = newValue;
                 // DebugLog("Set rotation at rest to: " + newValue.ToString());
+            }
+        }
+
+        protected void OnConstraintRotationOffsetChanged(Vector3 oldValue, Vector3 newValue)
+        {
+            if (Constraint != null)
+            {
+                RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
+                rotationConstraint.rotationOffset = newValue;
+                // DebugLog("Set rotation offset to: " + newValue.ToString());
             }
         }
 
@@ -63,13 +88,16 @@ namespace Warudo.Plugins.Scene.Assets
             Constraint = ParentTransform.GetComponent<RotationConstraint>();
             RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
             rotationConstraint.SetSources(new List<ConstraintSource> { constraintSource });
+
             rotationConstraint.enabled = true;
             rotationConstraint.constraintActive = true;
 
+            DebugLog("Parent local rotation:" + ParentTransform.localRotation.ToString());
             DebugLog("Rotation at rest local:" + ParentRestLocalRotation.ToString());
-        }
 
-        protected override void WatchAdditionalConstraintInputs() { }
+            rotationConstraint.rotationOffset =
+                ParentTransform.localRotation.eulerAngles - ParentRestLocalRotation.eulerAngles;
+        }
 
         protected override void UpdateConstraintDataInputs()
         {
@@ -79,6 +107,11 @@ namespace Warudo.Plugins.Scene.Assets
             SetDataInput(
                 nameof(ConstraintRotationAtRest),
                 rotationConstraint.rotationAtRest,
+                broadcast: true
+            );
+            SetDataInput(
+                nameof(ConstraintRotationOffset),
+                rotationConstraint.rotationOffset,
                 broadcast: true
             );
 
