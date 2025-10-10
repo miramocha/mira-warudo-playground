@@ -41,24 +41,36 @@ namespace Warudo.Plugins.Scene.Assets
         [DataInput(UnityConstraintUIOrdering.ROTATION_OFFSET_INPUT)]
         [Label("Rotation Offset")]
         [HiddenIf(nameof(HideRotationOffset))]
+        [DisabledIf(nameof(Locked), Is.True)]
         public Vector3 ConstraintRotationOffset = Vector3.zero;
 
-        [Trigger(UnityConstraintUIOrdering.RESET_ROTATION_OFFSET_TRIGGER)]
-        [Label("Reset Rotation Offset")]
-        [HiddenIf(nameof(HideRotationOffset))]
-        public void ResetConstraintRotationOffset()
-        {
-            Vector3 offset =
-                ParentRestLocalRotation.eulerAngles - ParentTransform.localRotation.eulerAngles;
-            DebugLog(
-                "ParentTransform rotation: " + ParentTransform.localRotation.eulerAngles.ToString()
-            );
-            DebugLog("ParentRestLocalRotation: " + ParentRestLocalRotation.eulerAngles.ToString());
-            DebugLog("Initial rotation offset set to: " + offset.ToString());
-            SetDataInput(nameof(ConstraintRotationOffset), offset, broadcast: true);
+        // [Trigger(UnityConstraintUIOrdering.RESET_ROTATION_OFFSET_TRIGGER)]
+        // [Label("Reset Rotation Offset")]
+        // [HiddenIf(nameof(HideRotationOffset))]
+        // public void ResetConstraintRotationOffset()
+        // {
+        //     Vector3 offset =
+        //         ParentRestLocalRotation.eulerAngles - ParentTransform.localRotation.eulerAngles;
+        //     DebugLog(
+        //         "ParentTransform rotation: " + ParentTransform.localRotation.eulerAngles.ToString()
+        //     );
+        //     DebugLog("ParentRestLocalRotation: " + ParentRestLocalRotation.eulerAngles.ToString());
+        //     DebugLog("Initial rotation offset set to: " + offset.ToString());
+        //     SetDataInput(nameof(ConstraintRotationOffset), offset, broadcast: true);
 
-            RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
-            rotationConstraint.rotationOffset = offset;
+        //     RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
+        //     rotationConstraint.rotationOffset = offset;
+        // }
+
+        protected override void ApplyLockedConstraintSettings()
+        {
+            if (Constraint != null)
+            {
+                RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
+                rotationConstraint.weight = Weight;
+                rotationConstraint.rotationAtRest = ConstraintRotationAtRest;
+                rotationConstraint.rotationAxis = FreezePositionAxes;
+            }
         }
 
         protected override void WatchAdditionalConstraintInputs()
@@ -75,7 +87,7 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
                 rotationConstraint.rotationAtRest = newValue;
-                // DebugLog("Set rotation at rest to: " + newValue.ToString());
+                DebugLog("Set rotation at rest to: " + newValue.ToString());
             }
         }
 
@@ -85,7 +97,7 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
                 rotationConstraint.rotationOffset = newValue;
-                // DebugLog("Set rotation offset to: " + newValue.ToString());
+                DebugLog("Set rotation offset to: " + newValue.ToString());
             }
         }
 
