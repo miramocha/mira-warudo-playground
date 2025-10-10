@@ -38,12 +38,12 @@ namespace Warudo.Plugins.Scene.Assets
             return false;
         }
 
-        [DataInput(1021)]
+        [DataInput(UnityConstraintUIOrdering.ROTATION_OFFSET_INPUT)]
         [Label("Rotation Offset")]
         [HiddenIf(nameof(HideRotationOffset))]
         public Vector3 ConstraintRotationOffset = Vector3.zero;
 
-        [Trigger(1022)]
+        [Trigger(UnityConstraintUIOrdering.RESET_ROTATION_OFFSET_TRIGGER)]
         [Label("Reset Rotation Offset")]
         [HiddenIf(nameof(HideRotationOffset))]
         public void ResetConstraintRotationOffset()

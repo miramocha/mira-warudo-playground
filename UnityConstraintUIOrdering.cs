@@ -16,6 +16,9 @@ namespace Warudo.Plugins.Scene.Assets
             WEIGHT_INPUT = 1003,
             POSITION_AT_REST_INPUT = 1004,
             ROTATION_AT_REST_INPUT = 1005,
+            // Rotation constraint specific
+            ROTATION_OFFSET_INPUT = 1021,
+            RESET_ROTATION_OFFSET_TRIGGER = 1022,
             // Freeze Rotation
             FREEZE_ROTATION_SECTION = 1100,
             FREEZE_ROTATION_X_INPUT = 1101,
