@@ -18,12 +18,12 @@ namespace Warudo.Plugins.Scene.Assets
     {
         private const string DEFAULT_DEBUG_MESSAGE = "Debug messages will appear here.";
 
-        [Section("Debug", 2000)]
-        [DataInput(2001)]
+        [Section("Debug", UnityConstraintUIOrdering.DEBUG_SECTION)]
+        [DataInput(UnityConstraintUIOrdering.DEBUG_MODE_INPUT)]
         [Label("DEBUG")]
         public bool DebugMode = false;
 
-        [Trigger(2002)]
+        [Trigger(UnityConstraintUIOrdering.CLEAR_DEBUG_LOG_TRIGGER)]
         [HiddenIf(nameof(DebugMode), Is.False)]
         public void ClearDebugLog()
         {
@@ -31,12 +31,12 @@ namespace Warudo.Plugins.Scene.Assets
             SetDataInput(nameof(DebugMessage), DEFAULT_DEBUG_MESSAGE, broadcast: true);
         }
 
-        [Section("Debug Info", 2500)]
+        [Section("Debug Info", UnityConstraintUIOrdering.DEBUG_INFO_SECTION)]
         [SectionHiddenIf(nameof(DebugMode), Is.False)]
-        [Markdown(order: 2501, primary: true)]
+        [Markdown(order: UnityConstraintUIOrdering.DEBUG_LOG_HEADER, primary: true)]
         public string DebugLogHeader = "Log Window";
 
-        [Markdown(2502)]
+    [Markdown(UnityConstraintUIOrdering.DEBUG_LOG_MESSAGE)]
         public string DebugMessage = DEFAULT_DEBUG_MESSAGE;
 
         private List<string> debugMessages = new List<string>();

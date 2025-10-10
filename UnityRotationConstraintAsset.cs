@@ -23,6 +23,21 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class UnityRotationConstraintAsset : AUnityConstraintAsset
     {
+        protected override bool HideFreezeRotationAxes()
+        {
+            return false;
+        }
+
+        protected override bool HideRotationAtRest()
+        {
+            return false;
+        }
+
+        protected bool HideRotationOffset()
+        {
+            return false;
+        }
+
         [DataInput(1021)]
         [Label("Rotation Offset")]
         [HiddenIf(nameof(HideRotationOffset))]
@@ -44,21 +59,6 @@ namespace Warudo.Plugins.Scene.Assets
 
             RotationConstraint rotationConstraint = (RotationConstraint)Constraint;
             rotationConstraint.rotationOffset = offset;
-        }
-
-        protected override bool HideFreezeRotationAxes()
-        {
-            return Constraint == null;
-        }
-
-        protected override bool HideRotationAtRest()
-        {
-            return Constraint == null;
-        }
-
-        protected bool HideRotationOffset()
-        {
-            return Constraint == null;
         }
 
         protected override void WatchAdditionalConstraintInputs()

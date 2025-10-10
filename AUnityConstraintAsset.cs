@@ -25,12 +25,12 @@ namespace Warudo.Plugins.Scene.Assets
         protected bool Activated = false;
         public IConstraint Constraint;
 
-        [Section("Constraint Parent", 9)]
-        [DataInput(10)]
+        [Section("Constraint Parent", UnityConstraintUIOrdering.PARENT_SECTION)]
+        [DataInput(UnityConstraintUIOrdering.PARENT_INPUT)]
         [Description("The parent GameObject to apply the constraint to.")]
         public GameObjectAsset Parent;
 
-        [DataInput(11)]
+        [DataInput(UnityConstraintUIOrdering.PARENT_TRANSFORM_PATH_INPUT)]
         [Label("Parent Transform Path")]
         [HiddenIf(nameof(Parent), Is.Null)]
         [AutoComplete("GetParentTransforms", true, "ROOT_TRANSFORM")]
@@ -39,12 +39,12 @@ namespace Warudo.Plugins.Scene.Assets
         public Vector3 ParentRestLocalPosition;
         public Quaternion ParentRestLocalRotation;
 
-        [Section("Constraint Source", 119)]
-        [DataInput(20)]
+        [Section("Constraint Source", UnityConstraintUIOrdering.SOURCE_SECTION)]
+        [DataInput(UnityConstraintUIOrdering.SOURCE_INPUT)]
         [Description("The source GameObject to drive the constraint.")]
         public GameObjectAsset Source;
 
-        [DataInput(121)]
+        [DataInput(UnityConstraintUIOrdering.SOURCE_TRANSFORM_PATH_INPUT)]
         [Label("Source Transform Path")]
         [HiddenIf(nameof(Source), Is.Null)]
         [AutoComplete("GetSourceTransforms", true, "ROOT_TRANSFORM")]
@@ -53,8 +53,8 @@ namespace Warudo.Plugins.Scene.Assets
         public Vector3 SourceRestLocalPosition;
         public Quaternion SourceRestLocalRotation;
 
-        [Section("Constraint Settings", 1000)]
-        [Trigger(1001)]
+        [Section("Constraint Settings", UnityConstraintUIOrdering.SETTINGS_SECTION)]
+        [Trigger(UnityConstraintUIOrdering.CREATE_CONSTRAINT_TRIGGER)]
         [DisabledIf(nameof(DisableCreateConstraintTrigger))]
         [HiddenIf(nameof(HideCreateConstraintTrigger))]
         public void CreateConstraint()
@@ -91,7 +91,7 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
-        [DataInput(1002)]
+        [DataInput(UnityConstraintUIOrdering.LOCK_TRIGGER)]
         [Label("Lock")]
         public bool Locked = false;
 
@@ -105,7 +105,7 @@ namespace Warudo.Plugins.Scene.Assets
             throw new NotImplementedException();
         }
 
-        [Trigger(1011)]
+        [Trigger(UnityConstraintUIOrdering.DELETE_CONSTRAINT_TRIGGER)]
         [HiddenIf(nameof(HideDeleteConstraintTrigger))]
         public virtual void DeleteConstraint()
         {
@@ -121,38 +121,38 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
-        [DataInput(1003)]
+        [DataInput(UnityConstraintUIOrdering.WEIGHT_INPUT)]
         [Label("Weight")]
         [FloatSlider(0, 1)]
         [HiddenIf(nameof(HideWeight))]
         [DisabledIf(nameof(Locked), Is.True)]
         public float Weight = 1.0f;
 
-        [DataInput(1010)]
+        [DataInput(UnityConstraintUIOrdering.POSITION_AT_REST_INPUT)]
         [Label("Position At Rest")]
         [HiddenIf(nameof(HidePositionAtRest))]
         [DisabledIf(nameof(Locked), Is.True)]
         public Vector3 ConstraintPositionAtRest = Vector3.zero;
 
-        [DataInput(1020)]
+        [DataInput(UnityConstraintUIOrdering.ROTATION_AT_REST_INPUT)]
         [Label("Rotation At Rest")]
         [HiddenIf(nameof(HideRotationAtRest))]
         [DisabledIf(nameof(Locked), Is.True)]
         public Vector3 ConstraintRotationAtRest = Vector3.zero;
 
-        [Section("Freeze Rotation Axes", 1100)]
+        [Section("Freeze Rotation Axes", UnityConstraintUIOrdering.FREEZE_ROTATION_SECTION)]
         [SectionHiddenIf(nameof(HideFreezeRotationAxes))]
-        [DataInput(1101)]
+        [DataInput(UnityConstraintUIOrdering.FREEZE_ROTATION_X_INPUT)]
         [Label("X Axis")]
         [DisabledIf(nameof(Locked), Is.True)]
         public bool FreezeRotationX = true;
 
-        [DataInput(1102)]
+        [DataInput(UnityConstraintUIOrdering.FREEZE_ROTATION_Y_INPUT)]
         [Label("Y Axis")]
         [DisabledIf(nameof(Locked), Is.True)]
         public bool FreezeRotationY = true;
 
-        [DataInput(1103)]
+        [DataInput(UnityConstraintUIOrdering.FREEZE_ROTATION_Z_INPUT)]
         [Label("Z Axis")]
         [DisabledIf(nameof(Locked), Is.True)]
         public bool FreezeRotationZ = true;
@@ -176,19 +176,19 @@ namespace Warudo.Plugins.Scene.Assets
             return true;
         }
 
-        [Section("Freeze Position Axes", 1200)]
+        [Section("Freeze Position Axes", UnityConstraintUIOrdering.FREEZE_POSITION_SECTION)]
         [SectionHiddenIf(nameof(HideFreezePositionAxes))]
-        [DataInput(1201)]
+        [DataInput(UnityConstraintUIOrdering.FREEZE_POSITION_X_INPUT)]
         [Label("X Axis")]
         [DisabledIf(nameof(Locked), Is.True)]
         public bool FreezePositionX = true;
 
-        [DataInput(1202)]
+        [DataInput(UnityConstraintUIOrdering.FREEZE_POSITION_Y_INPUT)]
         [Label("Y Axis")]
         [DisabledIf(nameof(Locked), Is.True)]
         public bool FreezePositionY = true;
 
-        [DataInput(1203)]
+        [DataInput(UnityConstraintUIOrdering.FREEZE_POSITION_Z_INPUT)]
         [Label("Z Axis")]
         [DisabledIf(nameof(Locked), Is.True)]
         public bool FreezePositionZ = true;
