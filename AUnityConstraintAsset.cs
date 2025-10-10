@@ -1,8 +1,8 @@
-using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Warudo.Core;
 using Warudo.Core.Attributes;
@@ -80,7 +80,7 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
-        public virtual bool HideFreezeRotationAxes()
+        protected virtual bool HideFreezeRotationAxes()
         {
             return true;
         }
@@ -113,7 +113,7 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
-        public virtual bool HideFreezePositionAxes()
+        protected virtual bool HideFreezePositionAxes()
         {
             return true;
         }
@@ -139,6 +139,7 @@ namespace Warudo.Plugins.Scene.Assets
             SourceRestLocalRotation = SourceTransform.localRotation;
 
             CreateSpecificConstraint();
+            UpdateConstraintDataInputs();
 
             if (Constraint == null)
             {
@@ -173,15 +174,36 @@ namespace Warudo.Plugins.Scene.Assets
         [HiddenIf(nameof(HideWeight))]
         public float Weight = 1.0f;
 
-        public virtual bool HideWeight()
+        [DataInput(1004)]
+        [Label("Position At Rest")]
+        [HiddenIf(nameof(HidePositionAtRest))]
+        public Vector3 ConstraintPositionAtRest = Vector3.zero;
+
+        [DataInput(1005)]
+        [Label("Rotation At Rest")]
+        [HiddenIf(nameof(HideRotationAtRest))]
+        public Vector3 ConstraintRotationAtRest = Vector3.zero;
+
+        protected virtual bool HideWeight()
         {
             return Constraint == null;
+        }
+
+        protected virtual bool HidePositionAtRest()
+        {
+            return true;
+        }
+
+        protected virtual bool HideRotationAtRest()
+        {
+            return true;
         }
 
         public void ResetParent()
         {
             if (ParentTransform != null)
             {
+                DebugLog("Resetting parent to rest position.");
                 ParentTransform.localPosition = ParentRestLocalPosition;
                 ParentTransform.localRotation = ParentRestLocalRotation;
             }
@@ -191,6 +213,7 @@ namespace Warudo.Plugins.Scene.Assets
         {
             if (SourceTransform != null)
             {
+                DebugLog("Resetting source to rest position.");
                 SourceTransform.localPosition = SourceRestLocalPosition;
                 SourceTransform.localRotation = SourceRestLocalRotation;
             }
@@ -269,11 +292,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected virtual void ReloadConstraint()
         {
-            if (Constraint != null)
-            {
-                DeleteConstraint();
-            }
-
+            DeleteConstraint();
             CreateConstraint();
         }
 
@@ -283,15 +302,34 @@ namespace Warudo.Plugins.Scene.Assets
             SetActive(true);
             // ReloadConstraint();
 
-            if(Parent == null) DebugLog("Parent is null");
-            if(Source == null) DebugLog("Source is null");
-            if(Constraint == null) DebugLog("Constraint is null");
+            if (Parent == null)
+                DebugLog("Parent is null");
+            if (Source == null)
+                DebugLog("Source is null");
+            if (Constraint == null)
+                DebugLog("Constraint is null");
 
             Watch<GameObjectAsset>(nameof(Parent), OnParentChanged);
             Watch<GameObjectAsset>(nameof(Source), OnSourceChanged);
             Watch<String>(nameof(ParentTransformPath), OnParentTransformPathChanged);
             Watch<String>(nameof(SourceTransformPath), OnSourceTransformPathChanged);
             Watch<float>(nameof(Weight), OnWeightChanged);
+            Watch<Vector3>(
+                nameof(ConstraintPositionAtRest),
+                OnConstraintPositionAtRestChanged
+            );
+            Watch<Vector3>(nameof(ConstraintRotationAtRest), OnConstraintRotationAtRestChanged);
+            WatchAdditionalConstraintInputs();
+        }
+
+        protected virtual void WatchAdditionalConstraintInputs()
+        {
+            // for subclasses to override
+        }
+
+        protected virtual void UpdateConstraintDataInputs()
+        {
+            // for subclasses to override
         }
 
         protected void OnParentTransformPathChanged(string oldPath, string newPath)
@@ -312,6 +350,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected void OnParentChanged(GameObjectAsset oldParent, GameObjectAsset newParent)
         {
+            DebugLog($"Parent changed from {oldParent?.Name} to {newParent?.Name}");
             SetDataInput(nameof(ParentTransformPath), null, broadcast: true);
             if (Constraint != null)
             {
@@ -321,6 +360,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected void OnSourceChanged(GameObjectAsset oldSource, GameObjectAsset newSource)
         {
+            DebugLog($"Source changed from {oldSource?.Name} to {newSource?.Name}");
             SetDataInput(nameof(SourceTransformPath), null, broadcast: true);
             if (Constraint != null)
             {
@@ -332,6 +372,16 @@ namespace Warudo.Plugins.Scene.Assets
         {
             Constraint.weight = newWeight;
         }
+
+        protected virtual void OnConstraintPositionAtRestChanged(
+            Vector3 oldPos,
+            Vector3 newPos
+        ) { }
+
+        protected virtual void OnConstraintRotationAtRestChanged(
+            Vector3 oldValue,
+            Vector3 newValue
+        ) { }
 
         protected const string DEFAULT_PARENT_TRANSFORM_INFO =
             "Parent Transform info will appear here.";
@@ -357,7 +407,7 @@ namespace Warudo.Plugins.Scene.Assets
         [Markdown(2508)]
         public string ConstraintInfo = DEFAULT_CONSTRAINT_INFO;
 
-        public virtual void UpdateConstraintDebugInfo()
+        protected virtual void UpdateConstraintDebugInfo()
         {
             if (ParentTransform != null)
             {
@@ -413,6 +463,12 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 UpdateConstraintDebugInfo();
             }
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            DeleteConstraint();
         }
     }
 }

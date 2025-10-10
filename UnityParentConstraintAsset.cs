@@ -22,36 +22,91 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class UnityParentConstraintAsset : AUnityConstraintAsset
     {
-        public override bool HideFreezeRotationAxes()
+        protected override bool HideFreezeRotationAxes()
         {
             return Constraint == null;
         }
 
-        public override bool HideFreezePositionAxes()
+        protected override bool HideFreezePositionAxes()
         {
             return Constraint == null;
+        }
+
+        protected override bool HidePositionAtRest()
+        {
+            return Constraint == null;
+        }
+
+        protected override bool HideRotationAtRest()
+        {
+            return Constraint == null;
+        }
+
+        protected override void OnConstraintPositionAtRestChanged(
+            Vector3 oldValue,
+            Vector3 newValue
+        )
+        {
+            if (Constraint != null)
+            {
+                ParentConstraint parentConstraint = (ParentConstraint)Constraint;
+                parentConstraint.translationAtRest = newValue;
+                // DebugLog("Set position at rest to: " + newValue.ToString());
+            }
+        }
+
+        protected override void OnConstraintRotationAtRestChanged(
+            Vector3 oldValue,
+            Vector3 newValue
+        )
+        {
+            if (Constraint != null)
+            {
+                ParentConstraint parentConstraint = (ParentConstraint)Constraint;
+                parentConstraint.rotationAtRest = newValue;
+                // DebugLog("Set rotation at rest to: " + newValue.ToString());
+            }
         }
 
         protected override void CreateSpecificConstraint()
         {
             ConstraintSource constraintSource = new ConstraintSource();
             constraintSource.sourceTransform = SourceTransform;
-            constraintSource.weight = Weight;
+            constraintSource.weight = 1f; // Full weight from source for now
 
             ParentTransform.gameObject.AddComponent(typeof(ParentConstraint));
-
             Constraint = ParentTransform.GetComponent<ParentConstraint>();
             ParentConstraint parentConstraint = (ParentConstraint)Constraint;
-            parentConstraint.weight = Weight;
             parentConstraint.SetSources(new List<ConstraintSource> { constraintSource });
-            parentConstraint.constraintActive = true;
             parentConstraint.enabled = true;
+            parentConstraint.constraintActive = true;
 
-            DebugLog("Rotation at rest:" + parentConstraint.rotationAtRest.ToString());
             DebugLog("Rotation at rest local:" + ParentRestLocalRotation.ToString());
+            DebugLog("Position at rest local:" + ParentRestLocalPosition.ToString());
         }
 
-        public override void UpdateConstraintDebugInfo()
+        protected override void WatchAdditionalConstraintInputs() { }
+
+        protected override void UpdateConstraintDataInputs()
+        {
+            ParentConstraint parentConstraint = (ParentConstraint)Constraint;
+
+            SetDataInput(nameof(Weight), parentConstraint.weight, broadcast: true);
+            SetDataInput(
+                nameof(ConstraintPositionAtRest),
+                parentConstraint.translationAtRest,
+                broadcast: true
+            );
+            SetDataInput(
+                nameof(ConstraintRotationAtRest),
+                parentConstraint.rotationAtRest,
+                broadcast: true
+            );
+
+            DebugLog("Position Axis: " + parentConstraint.ToString());
+        }
+
+        protected override void UpdateConstraintDebugInfo()
         {
             base.UpdateConstraintDebugInfo();
 
@@ -59,13 +114,13 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 ParentConstraint parentConstraint = (ParentConstraint)Constraint;
                 List<string> constraintInfoLines = new List<string>
-                { 
+                {
                     "Constraint Active: " + parentConstraint.constraintActive,
                     "Enabled: " + parentConstraint.enabled,
                     "Weight: " + parentConstraint.weight,
-                    "Translation At Rest: " + parentConstraint.translationAtRest.ToString(),
+                    "Position At Rest: " + parentConstraint.translationAtRest.ToString(),
                     "Rotation At Rest: " + parentConstraint.rotationAtRest.ToString(),
-                    "Locked: " + parentConstraint.locked
+                    "Locked: " + parentConstraint.locked,
                 };
                 string newConstraintInfo = String.Join("<br>", constraintInfoLines);
                 SetDataInput(nameof(ConstraintInfo), newConstraintInfo, broadcast: true);

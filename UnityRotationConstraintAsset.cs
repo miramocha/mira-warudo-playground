@@ -22,7 +22,7 @@ namespace Warudo.Plugins.Scene.Assets
     )]
     public class UnityRotationConstraintAsset : AUnityConstraintAsset
     {
-        public override bool HideFreezeRotationAxes()
+        protected override bool HideFreezeRotationAxes()
         {
             return Constraint == null;
         }
