@@ -41,7 +41,10 @@ namespace Warudo.Plugins.Scene.Assets
         [HiddenIf(nameof(Parent), Is.Null)]
         [AutoComplete("GetParentTransforms", true, "ROOT_TRANSFORM")]
         public string ParentTransformPath;
-        public Transform ParentTransform => Parent?.GameObject?.transform.Find(ParentTransformPath);
+        public Transform ParentTransform =>
+            ParentTransformPath == null
+                ? Parent?.GameObject?.transform
+                : Parent?.GameObject?.transform.Find(ParentTransformPath);
         public Vector3 ParentRestLocalPosition;
         public Quaternion ParentRestLocalRotation;
 
@@ -55,7 +58,12 @@ namespace Warudo.Plugins.Scene.Assets
         [HiddenIf(nameof(Source), Is.Null)]
         [AutoComplete("GetSourceTransforms", true, "ROOT_TRANSFORM")]
         public string SourceTransformPath;
-        public Transform SourceTransform => Source?.GameObject?.transform.Find(SourceTransformPath);
+        public Transform SourceTransform =>
+            SourceTransformPath == null
+                ? Source?.GameObject?.transform
+                : Source?.GameObject?.transform.Find(SourceTransformPath);
+
+        // Source?.GameObject?.transform.Find(SourceTransformPath);
         public Vector3 SourceRestLocalPosition;
         public Quaternion SourceRestLocalRotation;
 
@@ -115,6 +123,11 @@ namespace Warudo.Plugins.Scene.Assets
         [HiddenIf(nameof(HideDeleteConstraintTrigger))]
         public virtual void DeleteConstraint()
         {
+            DeleteConstraint(true, true);
+        }
+
+        public virtual void DeleteConstraint(bool resetParent, bool resetSource)
+        {
             if (Constraint != null)
             {
                 UnityEngine.Object.Destroy((UnityEngine.Object)Constraint);
@@ -122,8 +135,10 @@ namespace Warudo.Plugins.Scene.Assets
                 Constraint = null;
 
                 // Reset parent and source to their rest positions
-                ResetParent();
-                ResetSource();
+                if (resetParent)
+                    ResetParent();
+                if (resetSource)
+                    ResetSource();
             }
         }
 
@@ -391,11 +406,19 @@ namespace Warudo.Plugins.Scene.Assets
                 {
                     DebugLog("Failed to create constraint: " + e.Message);
                 }
-                // }
             }
             else
             {
-                DeleteConstraint();
+                Transform oldParentTransform =
+                    oldPath == null
+                        ? Parent?.GameObject?.transform
+                        : Parent?.GameObject?.transform.Find(oldPath);
+                if (oldParentTransform != null)
+                {
+                    oldParentTransform.localPosition = ParentRestLocalPosition;
+                    oldParentTransform.localRotation = ParentRestLocalRotation;
+                }
+                DeleteConstraint(false, false);
             }
         }
 
@@ -418,34 +441,47 @@ namespace Warudo.Plugins.Scene.Assets
             }
             else
             {
-                DeleteConstraint();
+                Transform oldSourceTransform =
+                    oldPath == null
+                        ? Source?.GameObject?.transform
+                        : Source?.GameObject?.transform.Find(oldPath);
+                if (oldSourceTransform != null)
+                {
+                    oldSourceTransform.localPosition = SourceRestLocalPosition;
+                    oldSourceTransform.localRotation = SourceRestLocalRotation;
+                }
+                DeleteConstraint(false, false);
             }
         }
 
         protected void OnParentChanged(GameObjectAsset oldParent, GameObjectAsset newParent)
         {
-            DebugLog($"Parent changed from {oldParent?.Name} to {newParent?.Name}");
-            SetDataInput(nameof(ParentTransformPath), null, broadcast: true);
-
             if (ConstraintLoaded)
             {
                 Debug.Log("Constraint was initialized, resetting.");
             }
+            else
+            {
+                DeleteConstraint();
+            }
 
-            DeleteConstraint();
+            DebugLog($"Parent changed from {oldParent?.Name} to {newParent?.Name}");
+            SetDataInput(nameof(ParentTransformPath), null, broadcast: true);
         }
 
         protected void OnSourceChanged(GameObjectAsset oldSource, GameObjectAsset newSource)
         {
-            DebugLog($"Source changed from {oldSource?.Name} to {newSource?.Name}");
-            SetDataInput(nameof(SourceTransformPath), null, broadcast: true);
-
             if (ConstraintLoaded)
             {
                 Debug.Log("Constraint was initialized, resetting.");
             }
+            else
+            {
+                DeleteConstraint();
+            }
 
-            DeleteConstraint();
+            DebugLog($"Source changed from {oldSource?.Name} to {newSource?.Name}");
+            SetDataInput(nameof(SourceTransformPath), null, broadcast: true);
         }
 
         protected void OnWeightChanged(float oldWeight, float newWeight)

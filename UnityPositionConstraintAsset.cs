@@ -12,15 +12,15 @@ using Warudo.Plugins.Core.Assets.Mixins;
 using Warudo.Plugins.Core.Utils;
 using Axis = UnityEngine.Animations.Axis;
 using ConstraintSource = UnityEngine.Animations.ConstraintSource;
-using ParentConstraint = UnityEngine.Animations.ParentConstraint;
+using PositionConstraint = UnityEngine.Animations.PositionConstraint;
 
 namespace Warudo.Plugins.Scene.Assets
 {
-    [AssetType(
-        Id = "mira-position-constraint",
-        Title = "Position Constraint",
-        Category = "Unity Constraints"
-    )]
+    // [AssetType(
+    //     Id = "mira-position-constraint",
+    //     Title = "Position Constraint",
+    //     Category = "Unity Constraints"
+    // )]
     public class UnityPositionConstraintAsset : Asset
     {
         [Markdown(1000, primary: true)]
