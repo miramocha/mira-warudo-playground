@@ -235,7 +235,7 @@ namespace Warudo.Plugins.Scene.Assets
 
         protected virtual bool HideWeight()
         {
-            return Constraint == null;
+            return false;
         }
 
         protected virtual bool HidePositionAtRest()
@@ -450,7 +450,7 @@ namespace Warudo.Plugins.Scene.Assets
                     oldSourceTransform.localPosition = SourceRestLocalPosition;
                     oldSourceTransform.localRotation = SourceRestLocalRotation;
                 }
-                DeleteConstraint(false, false);
+                DeleteConstraint(true, false);
             }
         }
 
