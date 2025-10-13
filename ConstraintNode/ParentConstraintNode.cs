@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Warudo.Core;
 using Warudo.Core.Attributes;
+using Warudo.Core.Data.Models;
 using Warudo.Core.Graphs;
 using Warudo.Plugins.Core.Assets;
 using ConstraintSource = UnityEngine.Animations.ConstraintSource;
@@ -20,30 +22,45 @@ namespace Warudo.Plugins.Core.Nodes
     public class ParentConstraintNode : AssetChildGameObjectNode
     {
         private ParentConstraint constraint;
+        private TransformData originalTransform = new TransformData();
+
+        [DataOutput]
+        public int SourceCount() => constraint?.sourceCount ?? 0;
+
+        [DataOutput]
+        public TransformData OriginalTransform() => originalTransform;
 
         [DataOutput]
         public ParentConstraint Constraint() => constraint;
 
+        [DataInput(-998)]
+        [FloatSlider(0, 1)]
+        public float Weight = 1.0f;
+
         protected override void OnCreate()
         {
             base.OnCreate();
-            Watch<GameObjectAsset>(nameof(Asset), OnAssetChanged);
-            Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
-            Watch<ConstraintSourceData[]>(
-                nameof(ConstraintSourceDataList),
-                (oldValue, newValue) =>
-                {
-                    DebugToast("Constraint sources changed");
-                    if (constraint != null)
-                    {
-                        constraint.SetSources(ConstraintSources());
-                    }
-                }
-            );
+            Watch<float>(nameof(Weight), OnWeightChanged);
+        }
+
+        protected override void OnDestroy()
+        {
+            DestroyConstraint();
+            base.OnDestroy();
+        }
+
+        protected virtual void OnWeightChanged(float oldValue, float newValue)
+        {
+            if (constraint != null)
+            {
+                constraint.weight = newValue;
+            }
         }
 
         protected override void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
         {
+            base.OnAssetChanged(oldValue, newValue);
+            DebugToast("Asset changed to " + newValue?.Name);
             DestroyConstraint();
             if (FindTargetTransform() == null)
             {
@@ -55,7 +72,9 @@ namespace Warudo.Plugins.Core.Nodes
 
         protected override void OnGameObjectPathChanged(string oldValue, string newValue)
         {
+            base.OnGameObjectPathChanged(oldValue, newValue);
             DestroyConstraint();
+            DebugToast("Path changed to " + newValue);
             if (FindTargetTransform() == null)
             {
                 return;
@@ -69,6 +88,7 @@ namespace Warudo.Plugins.Core.Nodes
             if (constraint != null)
             {
                 DebugToast("Destroying existing constraint");
+                originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
                 UnityEngine.Object.Destroy((UnityEngine.Object)constraint);
                 constraint = null;
 
@@ -83,12 +103,21 @@ namespace Warudo.Plugins.Core.Nodes
             // ConstraintSource constraintSource = new ConstraintSource();
             // constraintSource.sourceTransform = SourceTransform;
             // constraintSource.weight = 1f; // Full weight from source for now
-
+            DebugToast("Creating new ParentConstraint on " + Transform().name);
+            originalTransform.CopyFromLocalTransform(Transform());
             Transform().gameObject.AddComponent(typeof(ParentConstraint));
             constraint = Transform().GetComponent<ParentConstraint>();
             constraint.SetSources(ConstraintSources());
+            constraint.weight = Weight;
             constraint.enabled = true;
             constraint.constraintActive = true;
+        }
+
+        [Trigger]
+        [Description("Temp workaround for now")]
+        public void RefreshSources()
+        {
+            constraint.SetSources(ConstraintSources());
         }
 
         [DataInput]
@@ -102,11 +131,10 @@ namespace Warudo.Plugins.Core.Nodes
                 new List<UnityEngine.Animations.ConstraintSource>();
             for (int i = 0; i < ConstraintSourceDataList.Length; i++)
             {
-                UnityEngine.Animations.ConstraintSource source =
-                    new UnityEngine.Animations.ConstraintSource();
-                source.sourceTransform = ConstraintSourceDataList[i].FindTargetTransform();
-                source.weight = ConstraintSourceDataList[i].Weight;
-                sources.Add(source);
+                if (ConstraintSourceDataList[i].ConstraintSource().sourceTransform != null)
+                {
+                    sources.Add(ConstraintSourceDataList[i].ConstraintSource());
+                }
             }
 
             return sources;
