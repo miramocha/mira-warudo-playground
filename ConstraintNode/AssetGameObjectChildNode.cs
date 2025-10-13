@@ -1,6 +1,5 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using Warudo.Core;
 using Warudo.Core.Attributes;
 using Warudo.Core.Graphs;
 using Warudo.Plugins.Core.Assets;
@@ -28,13 +27,7 @@ public class AssetChildGameObjectNode : AssetGameObjectNode
         Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
     }
 
-    protected virtual void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
-    {
-        // Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", "GameObject changed");
-    }
+    protected virtual void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue) { }
 
-    protected virtual void OnGameObjectPathChanged(string oldValue, string newValue)
-    {
-        // Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", "GameObject path changed");
-    }
+    protected virtual void OnGameObjectPathChanged(string oldValue, string newValue) { }
 }

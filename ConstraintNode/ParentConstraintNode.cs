@@ -24,18 +24,22 @@ namespace Warudo.Plugins.Core.Nodes
         private ParentConstraint constraint;
         private TransformData originalTransform = new TransformData();
 
-        [DataOutput]
-        public int SourceCount() => constraint?.sourceCount ?? 0;
+        // [DataOutput]
+        // public int SourceCount() => constraint?.sourceCount ?? 0;
 
-        [DataOutput]
-        public TransformData OriginalTransform() => originalTransform;
+        // [DataOutput]
+        // public TransformData OriginalTransform() => originalTransform;
 
-        [DataOutput]
-        public ParentConstraint Constraint() => constraint;
+        // [DataOutput]
+        // public ParentConstraint Constraint() => constraint;
 
         [DataInput(-998)]
         [FloatSlider(0, 1)]
         public float Weight = 1.0f;
+
+        [DataInput]
+        [Label("Constraint Sources")]
+        public ConstraintSourceData[] ConstraintSourceDataList;
 
         protected override void OnCreate()
         {
@@ -104,10 +108,6 @@ namespace Warudo.Plugins.Core.Nodes
                 originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
                 UnityEngine.Object.Destroy((UnityEngine.Object)constraint);
                 constraint = null;
-
-                // Reset parent and source to their rest positions
-                // if (resetParent)
-                //     ResetParent();
             }
         }
 
@@ -142,10 +142,6 @@ namespace Warudo.Plugins.Core.Nodes
             constraint.SetSources(sources);
         }
 
-        [DataInput]
-        [Label("Constraint Sources")]
-        public ConstraintSourceData[] ConstraintSourceDataList;
-
         public void UpdateConstriantSource(ConstraintSourceData constraintSourceData)
         {
             if (constraint != null)
@@ -168,10 +164,12 @@ namespace Warudo.Plugins.Core.Nodes
             }
         }
 
-        public void DebugToast(string msg)
+        private bool DebugMode = false;
+
+        private void DebugToast(string msg)
         {
-            // if (!DebugMode)
-            //     return;
+            if (!DebugMode)
+                return;
 
             Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", msg);
         }

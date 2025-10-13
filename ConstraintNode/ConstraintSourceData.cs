@@ -2,26 +2,16 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Warudo.Core.Attributes;
 using Warudo.Core.Data;
-using Warudo.Core.Graphs;
 using Warudo.Core.Utils;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Assets.Character;
 using Warudo.Plugins.Core.Assets.Environment;
 using Warudo.Plugins.Core.Utils;
-using ConstraintSource = UnityEngine.Animations.ConstraintSource;
 
 namespace Warudo.Plugins.Core.Nodes;
 
 public class ConstraintSourceData : StructuredData
 {
-    // private UnityEngine.Animations.ConstraintSource constraintSource =
-    //     new UnityEngine.Animations.ConstraintSource();
-
-
-
-    // [DataOutput]
-    // public UnityEngine.Animations.ConstraintSource ConstraintSource() => constraintSource;
-
     public IConstraintSourceDataParent constraintSourceDataParent;
     public int index = 0;
 
