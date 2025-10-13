@@ -19,7 +19,7 @@ namespace Warudo.Plugins.Core.Nodes
         Category = "Unity Constraints",
         Width = 2f
     )]
-    public class ParentConstraintNode : AssetChildGameObjectNode
+    public class ParentConstraintNode : AssetChildGameObjectNode, IConstraintSourceDataParent
     {
         private ParentConstraint constraint;
         private TransformData originalTransform = new TransformData();
@@ -41,7 +41,10 @@ namespace Warudo.Plugins.Core.Nodes
         {
             base.OnCreate();
             Watch<float>(nameof(Weight), OnWeightChanged);
-            Watch<ConstraintSourceData[]>(nameof(ConstraintSourceDataList), OnConstraintSourceDataListChanged);
+            Watch<ConstraintSourceData[]>(
+                nameof(ConstraintSourceDataList),
+                OnConstraintSourceDataListChanged
+            );
         }
 
         protected override void OnDestroy()
@@ -58,10 +61,13 @@ namespace Warudo.Plugins.Core.Nodes
             }
         }
 
-        protected virtual void OnConstraintSourceDataListChanged(ConstraintSourceData[] oldValue, ConstraintSourceData[] newValue)
+        protected virtual void OnConstraintSourceDataListChanged(
+            ConstraintSourceData[] oldValue,
+            ConstraintSourceData[] newValue
+        )
         {
             DebugToast("old size: " + oldValue.Length + "new size: " + newValue.Length);
-            RefreshSources();
+            UpdateConstraintSources();
         }
 
         protected override void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
@@ -107,50 +113,59 @@ namespace Warudo.Plugins.Core.Nodes
 
         protected void CreateConstraint()
         {
-            // ConstraintSource constraintSource = new ConstraintSource();
-            // constraintSource.sourceTransform = SourceTransform;
-            // constraintSource.weight = 1f; // Full weight from source for now
             DebugToast("Creating new ParentConstraint on " + Transform().name);
             originalTransform.CopyFromLocalTransform(Transform());
             Transform().gameObject.AddComponent(typeof(ParentConstraint));
             constraint = Transform().GetComponent<ParentConstraint>();
-            constraint.SetSources(ConstraintSources());
+            UpdateConstraintSources();
             constraint.weight = Weight;
             constraint.enabled = true;
             constraint.constraintActive = true;
         }
 
-        [FlowInput]
-        public Continuation RefreshSources()
+        protected void UpdateConstraintSources()
         {
-            constraint.SetSources(ConstraintSources());
-            return null;
-        }
+            List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
+            for (int i = 0; i < ConstraintSourceDataList.Length; i++)
+            {
+                ConstraintSourceData constraintSourceData = ConstraintSourceDataList[i];
+                constraintSourceData.index = i;
+                constraintSourceData.constraintSourceDataParent = this;
 
-        // [FlowOutput]
-        // public Continuation  SourceRefreshed()
-        // {
-        //     return null;
-        // }
+                UnityEngine.Animations.ConstraintSource source =
+                    new UnityEngine.Animations.ConstraintSource();
+                source.weight = constraintSourceData.Weight;
+                source.sourceTransform = constraintSourceData.FindTargetTransform();
+                sources.Add(source);
+            }
+
+            constraint.SetSources(sources);
+        }
 
         [DataInput]
         [Label("Constraint Sources")]
         public ConstraintSourceData[] ConstraintSourceDataList;
 
-        public List<UnityEngine.Animations.ConstraintSource> ConstraintSources()
+        public void UpdateConstriantSource(ConstraintSourceData constraintSourceData)
         {
-            DebugToast("Getting constraint sources");
-            List<UnityEngine.Animations.ConstraintSource> sources =
-                new List<UnityEngine.Animations.ConstraintSource>();
-            for (int i = 0; i < ConstraintSourceDataList.Length; i++)
+            if (constraint != null)
             {
-                if (ConstraintSourceDataList[i].ConstraintSource().sourceTransform != null)
+                UnityEngine.Animations.ConstraintSource constraintSource;
+                try
                 {
-                    sources.Add(ConstraintSourceDataList[i].ConstraintSource());
+                    constraintSource = constraint.GetSource(constraintSourceData.index);
                 }
-            }
+                catch (Exception e)
+                {
+                    return;
+                }
 
-            return sources;
+                constraintSource.weight = constraintSourceData.Weight;
+                constraintSource.sourceTransform = constraintSourceData.FindTargetTransform();
+                // Since ConstraintSource is a struct, we have to put the whole thing back in
+
+                constraint.SetSource(constraintSourceData.index, constraintSource);
+            }
         }
 
         public void DebugToast(string msg)

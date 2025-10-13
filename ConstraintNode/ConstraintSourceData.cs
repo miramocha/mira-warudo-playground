@@ -14,11 +14,16 @@ namespace Warudo.Plugins.Core.Nodes;
 
 public class ConstraintSourceData : StructuredData
 {
-    private UnityEngine.Animations.ConstraintSource constraintSource =
-        new UnityEngine.Animations.ConstraintSource();
+    // private UnityEngine.Animations.ConstraintSource constraintSource =
+    //     new UnityEngine.Animations.ConstraintSource();
 
-    [DataOutput]
-    public UnityEngine.Animations.ConstraintSource ConstraintSource() => constraintSource;
+
+
+    // [DataOutput]
+    // public UnityEngine.Animations.ConstraintSource ConstraintSource() => constraintSource;
+
+    public IConstraintSourceDataParent constraintSourceDataParent;
+    public int index = 0;
 
     [DataInput(-1000)]
     [Label("ASSET")]
@@ -37,25 +42,16 @@ public class ConstraintSourceData : StructuredData
     protected override void OnCreate()
     {
         base.OnCreate();
-        Watch<GameObjectAsset>(nameof(Asset), OnAssetChanged);
-        Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
-        Watch<float>(nameof(Weight), OnWeightChanged);
-        constraintSource.weight = Weight;
+        WatchAll(new [] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) }, OnDataChanged);
+        // constraintSource.weight = Weight;
     }
 
-    protected void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
+    protected void OnDataChanged()
     {
-        constraintSource.sourceTransform = FindTargetTransform();
-    }
-
-    protected void OnGameObjectPathChanged(string oldValue, string newValue)
-    {
-        constraintSource.sourceTransform = FindTargetTransform();
-    }
-
-    protected void OnWeightChanged(float oldValue, float newValue)
-    {
-        constraintSource.weight = newValue;
+        if(constraintSourceDataParent != null)
+        {
+            constraintSourceDataParent.UpdateConstriantSource(this);
+        }
     }
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
