@@ -41,6 +41,7 @@ namespace Warudo.Plugins.Core.Nodes
         {
             base.OnCreate();
             Watch<float>(nameof(Weight), OnWeightChanged);
+            Watch<ConstraintSourceData[]>(nameof(ConstraintSourceDataList), OnConstraintSourceDataListChanged);
         }
 
         protected override void OnDestroy()
@@ -55,6 +56,12 @@ namespace Warudo.Plugins.Core.Nodes
             {
                 constraint.weight = newValue;
             }
+        }
+
+        protected virtual void OnConstraintSourceDataListChanged(ConstraintSourceData[] oldValue, ConstraintSourceData[] newValue)
+        {
+            DebugToast("old size: " + oldValue.Length + "new size: " + newValue.Length);
+            RefreshSources();
         }
 
         protected override void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
@@ -113,12 +120,18 @@ namespace Warudo.Plugins.Core.Nodes
             constraint.constraintActive = true;
         }
 
-        [Trigger]
-        [Description("Temp workaround for now")]
-        public void RefreshSources()
+        [FlowInput]
+        public Continuation RefreshSources()
         {
             constraint.SetSources(ConstraintSources());
+            return null;
         }
+
+        // [FlowOutput]
+        // public Continuation  SourceRefreshed()
+        // {
+        //     return null;
+        // }
 
         [DataInput]
         [Label("Constraint Sources")]
