@@ -21,13 +21,11 @@ namespace Warudo.Plugins.Core.Nodes
     )]
     public class ParentConstraintNode : AAssetChildGameObjectNode, IConstraintSourceDataParent
     {
-        private ParentConstraint constraint() =>
-            (ParentConstraint)Transform().GetComponent<ParentConstraint>();
-
+        private ParentConstraint constraint;
         private TransformData originalTransform = new TransformData();
 
         [DataOutput]
-        public int SourceCount() => constraint()?.sourceCount ?? 0;
+        public int SourceCount() => constraint?.sourceCount ?? 0;
 
         // [FlowInput]
         // public Continuation Reset()
@@ -74,7 +72,7 @@ namespace Warudo.Plugins.Core.Nodes
         {
             if (constraint != null)
             {
-                constraint().weight = newValue;
+                constraint.weight = newValue;
             }
         }
 
@@ -115,12 +113,12 @@ namespace Warudo.Plugins.Core.Nodes
 
         protected void DestroyConstraint()
         {
-            if (constraint() != null)
+            if (constraint != null)
             {
                 DebugToast("Destroying existing constraint");
-                originalTransform.ApplyAsLocalTransform(constraint().gameObject.transform);
-                UnityEngine.Object.Destroy((UnityEngine.Object)constraint());
-                // constraint = null;
+                originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
+                UnityEngine.Object.Destroy((UnityEngine.Object)constraint);
+                constraint = null;
             }
         }
 
@@ -129,11 +127,11 @@ namespace Warudo.Plugins.Core.Nodes
             DebugToast("Creating new ParentConstraint on " + Transform().name);
             originalTransform.CopyFromLocalTransform(Transform());
             Transform().gameObject.AddComponent(typeof(ParentConstraint));
-            // constraint = Transform().GetComponent<ParentConstraint>();
+            constraint = Transform().GetComponent<ParentConstraint>();
             UpdateConstraintSources();
-            constraint().weight = Weight;
-            constraint().enabled = true;
-            constraint().constraintActive = true;
+            constraint.weight = Weight;
+            constraint.enabled = true;
+            constraint.constraintActive = true;
         }
 
         [FlowInput]
@@ -152,9 +150,8 @@ namespace Warudo.Plugins.Core.Nodes
             List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
             if (ConstraintSourceDataList.Length == 0)
             {
-                DebugToast("No Source Found");
-                constraint().SetSources(sources);
-                originalTransform.ApplyAsLocalTransform(constraint().gameObject.transform);
+                constraint.SetSources(sources);
+                originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
                 return;
             }
 
@@ -171,7 +168,7 @@ namespace Warudo.Plugins.Core.Nodes
                 sources.Add(source);
             }
 
-            constraint().SetSources(sources);
+            constraint.SetSources(sources);
         }
 
         public void UpdateConstriantSource(ConstraintSourceData constraintSourceData)
@@ -181,7 +178,7 @@ namespace Warudo.Plugins.Core.Nodes
                 UnityEngine.Animations.ConstraintSource constraintSource;
                 try
                 {
-                    constraintSource = constraint().GetSource(constraintSourceData.index);
+                    constraintSource = constraint.GetSource(constraintSourceData.index);
                 }
                 catch (Exception e)
                 {
@@ -191,11 +188,11 @@ namespace Warudo.Plugins.Core.Nodes
                 constraintSource.weight = constraintSourceData.Weight;
                 constraintSource.sourceTransform = constraintSourceData.FindTargetTransform();
                 // Since ConstraintSource is a struct, we have to put the whole thing back in
-                constraint().SetSource(constraintSourceData.index, constraintSource);
+                constraint.SetSource(constraintSourceData.index, constraintSource);
             }
         }
 
-        private bool DebugMode = true;
+        private bool DebugMode = false;
 
         private void DebugToast(string msg)
         {
