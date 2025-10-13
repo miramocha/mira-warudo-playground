@@ -6,19 +6,25 @@ using Warudo.Plugins.Core.Assets;
 
 namespace Warudo.Plugins.Core.Nodes;
 
-[NodeType(
-    Id = "mira-asset-child-gameobject",
-    Title = "Asset Child GameObject",
-    Category = "Utilities",
-    Width = 2f
-)]
-public class AssetChildGameObjectNode : AssetGameObjectNode
+public abstract class AAssetChildGameObjectNode : AssetGameObjectNode
 {
     [DataOutput]
+    [HiddenIf(nameof(HideGameObjectOutput))]
     public GameObject GameObject() => base.FindTargetTransform()?.gameObject;
 
     [DataOutput]
+    [HiddenIf(nameof(HideGameObjectTransformOutput))]
     public Transform Transform() => GameObject()?.gameObject?.transform;
+
+    protected virtual bool HideGameObjectOutput()
+    {
+        return true;
+    }
+
+    protected virtual bool HideGameObjectTransformOutput()
+    {
+        return true;
+    }
 
     protected override void OnCreate()
     {

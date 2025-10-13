@@ -19,13 +19,24 @@ namespace Warudo.Plugins.Core.Nodes
         Category = "Unity Constraints",
         Width = 2f
     )]
-    public class ParentConstraintNode : AssetChildGameObjectNode, IConstraintSourceDataParent
+    public class ParentConstraintNode : AAssetChildGameObjectNode, IConstraintSourceDataParent
     {
         private ParentConstraint constraint;
         private TransformData originalTransform = new TransformData();
 
-        // [DataOutput]
-        // public int SourceCount() => constraint?.sourceCount ?? 0;
+        [DataOutput]
+        public int SourceCount() => constraint?.sourceCount ?? 0;
+
+        // [FlowInput]
+        // public Continuation Reset()
+        // {
+        //     if (constraint != null)
+        //     {
+        //         DestroyConstraint();
+        //         CreateConstraint();
+        //     }
+        //     return null;
+        // }
 
         // [DataOutput]
         // public TransformData OriginalTransform() => originalTransform;
@@ -123,9 +134,27 @@ namespace Warudo.Plugins.Core.Nodes
             constraint.constraintActive = true;
         }
 
+        [FlowInput]
+        public Continuation UpdateSources()
+        {
+            UpdateConstraintSources();
+            return UpdateSourcesExit;
+        }
+
+        [FlowOutput]
+        [Label("Source Updated")]
+        public Continuation UpdateSourcesExit;
+
         protected void UpdateConstraintSources()
         {
             List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
+            if (ConstraintSourceDataList.Length == 0)
+            {
+                constraint.SetSources(sources);
+                originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
+                return;
+            }
+
             for (int i = 0; i < ConstraintSourceDataList.Length; i++)
             {
                 ConstraintSourceData constraintSourceData = ConstraintSourceDataList[i];
@@ -159,7 +188,6 @@ namespace Warudo.Plugins.Core.Nodes
                 constraintSource.weight = constraintSourceData.Weight;
                 constraintSource.sourceTransform = constraintSourceData.FindTargetTransform();
                 // Since ConstraintSource is a struct, we have to put the whole thing back in
-
                 constraint.SetSource(constraintSourceData.index, constraintSource);
             }
         }
