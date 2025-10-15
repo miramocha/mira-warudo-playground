@@ -37,7 +37,7 @@ namespace Warudo.Plugins.Scene.Assets
             }
         }
 
-        [Section("Create Constraint")]
+        [Section("➕ Create Constraint")]
         [Trigger]
         public async void CreateConstraint()
         {
@@ -76,7 +76,7 @@ namespace Warudo.Plugins.Scene.Assets
             // Retry prompt if gameobject transform is null or gameobject id is already in map
         }
 
-        [Section("Active Constraints")]
+        [Section("🔗 Active Constraints")]
         [DataInput]
         [Label("Constraints")]
         [Disabled]

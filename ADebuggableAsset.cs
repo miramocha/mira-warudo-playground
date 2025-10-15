@@ -28,7 +28,7 @@ namespace Warudo.Plugins.Scene.Assets
         private const string DEFAULT_DEBUG_LOG_MESSAGE = "Debug log messages will appear here.";
         private const string DEFAULT_DEBUG_INFO_MESSAGE = "Debug info will appear here";
 
-        [Section("Debug", UnityConstraintUIOrdering.DEBUG_SECTION)]
+        [Section("👁️‍🗨️ Debug", UnityConstraintUIOrdering.DEBUG_SECTION)]
         [DataInput(UnityConstraintUIOrdering.DEBUG_MODE_INPUT)]
         [Label("DEBUG")]
         public bool DebugMode = false;
@@ -41,7 +41,7 @@ namespace Warudo.Plugins.Scene.Assets
             SetDataInput(nameof(DebugMessage), DEFAULT_DEBUG_LOG_MESSAGE, broadcast: true);
         }
 
-        [Section("Debug Info", UnityConstraintUIOrdering.DEBUG_INFO_SECTION)]
+        [Section("👁️‍🗨️ Debug Info", UnityConstraintUIOrdering.DEBUG_INFO_SECTION)]
         [SectionHiddenIf(nameof(DebugMode), Is.False)]
         [Markdown(order: UnityConstraintUIOrdering.DEBUG_LOG_HEADER, primary: true)]
         public string DebugLogHeader = "Log Window";

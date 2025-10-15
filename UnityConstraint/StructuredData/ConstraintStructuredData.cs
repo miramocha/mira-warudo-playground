@@ -112,7 +112,10 @@ public class ConstraintStructuredData
         }
     }
 
-    public UnityParentConstraintsManagerAsset Manager { get; set; }
+    [DataInput]
+    [Hidden]
+    [Disabled]
+    public UnityParentConstraintsManagerAsset Manager;
 
     public string ConstraintTransformID
     {
@@ -142,8 +145,9 @@ public class ConstraintStructuredData
     {
         List<string> infoLines = new List<string>
         {
-            "Asset Id:" + Asset?.IdString,
-            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID() 
+            "Asset Id: " + Asset?.IdString,
+            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
+            "Manager Id: " + Manager?.IdString,
         };
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
