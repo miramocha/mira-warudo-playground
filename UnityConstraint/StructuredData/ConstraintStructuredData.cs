@@ -128,4 +128,24 @@ public class ConstraintStructuredData
     {
         return ConstraintStructuredDataUtil.FindTargetTransform(this);
     }
+
+    [Markdown]
+    public string ConstraintInfo = "Constraint Info will appear here";
+
+    protected override void OnUpdate()
+    {
+        base.OnUpdate();
+        updateConstraintInfo();
+    }
+
+    private void updateConstraintInfo()
+    {
+        List<string> infoLines = new List<string>
+        {
+            "Asset Id:" + Asset?.IdString,
+            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID() 
+        };
+        string newInfo = string.Join("<br>", infoLines);
+        SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
+    }
 }
