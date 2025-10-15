@@ -24,14 +24,14 @@ public class LiteralConstriantSourceDataNode : AAssetChildGameObjectNode
     protected override void OnCreate()
     {
         base.OnCreate();
-        Watch<GameObjectAsset>(nameof(Asset), OnAssetChanged);
+        WatchAsset(nameof(Asset), OnAssetChanged);
         Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
         Watch<float>(nameof(Weight), OnWeightChanged);
     }
 
-    protected override void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
+    protected override void OnAssetChanged()
     {
-        constraintSourceData.Asset = newValue;
+        constraintSourceData.Asset = base.Asset;
     }
 
     protected override void OnGameObjectPathChanged(string oldValue, string newValue)

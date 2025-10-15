@@ -16,12 +16,12 @@ public abstract class AAssetChildGameObjectNode : AssetGameObjectNode
     [HiddenIf(nameof(HideGameObjectTransformOutput))]
     public Transform Transform() => GameObject()?.gameObject?.transform;
 
-    protected virtual bool HideGameObjectOutput()
+    public virtual bool HideGameObjectOutput()
     {
         return true;
     }
 
-    protected virtual bool HideGameObjectTransformOutput()
+    public virtual bool HideGameObjectTransformOutput()
     {
         return true;
     }
@@ -29,11 +29,11 @@ public abstract class AAssetChildGameObjectNode : AssetGameObjectNode
     protected override void OnCreate()
     {
         base.OnCreate();
-        Watch<GameObjectAsset>(nameof(Asset), OnAssetChanged);
+        WatchAsset(nameof(Asset), OnAssetChanged);
         Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
     }
 
-    protected virtual void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue) { }
+    protected virtual void OnAssetChanged() { }
 
     protected virtual void OnGameObjectPathChanged(string oldValue, string newValue) { }
 }

@@ -21,178 +21,144 @@ namespace Warudo.Plugins.Core.Nodes
     )]
     public class ParentConstraintNode : AAssetChildGameObjectNode, IConstraintSourceDataParent
     {
-        private ParentConstraint constraint;
-        private TransformData originalTransform = new TransformData();
+        public bool isPrimary = false;
 
-        [DataOutput]
-        public int SourceCount() => constraint?.sourceCount ?? 0;
-
-        // [FlowInput]
-        // public Continuation Reset()
-        // {
-        //     if (constraint != null)
-        //     {
-        //         DestroyConstraint();
-        //         CreateConstraint();
-        //     }
-        //     return null;
-        // }
-
-        // [DataOutput]
-        // public TransformData OriginalTransform() => originalTransform;
-
-        // [DataOutput]
-        // public ParentConstraint Constraint() => constraint;
-
-        [DataInput(-998)]
+        [DataInput]
         [FloatSlider(0, 1)]
+        [HiddenIf(nameof(HideInput))]
         public float Weight = 1.0f;
 
         [DataInput]
         [Label("Constraint Sources")]
+        [HiddenIf(nameof(HideInput))]
         public ConstraintSourceData[] ConstraintSourceDataList;
+
+        public bool HideInput() => !isPrimary;
+
+        public override bool HideGameObjectOutput()
+        {
+            return false;
+        }
+
+        public override bool HideGameObjectTransformOutput()
+        {
+            return false;
+        }
+
+        [DataOutput]
+        [HiddenIf(nameof(HideInput))]
+        public GameObject Preview() => GameObject();
 
         protected override void OnCreate()
         {
             base.OnCreate();
-            Watch<float>(nameof(Weight), OnWeightChanged);
-            Watch<ConstraintSourceData[]>(
-                nameof(ConstraintSourceDataList),
-                OnConstraintSourceDataListChanged
-            );
+            // Watch<float>(nameof(Weight), OnWeightChanged);
+            // Watch<ConstraintSourceData[]>(
+            //     nameof(ConstraintSourceDataList),W
+            //     OnConstraintSourceDataListChanged
+            // );
         }
 
         protected override void OnDestroy()
         {
-            DestroyConstraint();
+            ParentConstraintNodeManager.DeregisterNode(this);
             base.OnDestroy();
         }
 
-        protected virtual void OnWeightChanged(float oldValue, float newValue)
-        {
-            if (constraint != null)
-            {
-                constraint.weight = newValue;
-            }
-        }
+        protected virtual void OnWeightChanged(float oldValue, float newValue) { }
 
         protected virtual void OnConstraintSourceDataListChanged(
             ConstraintSourceData[] oldValue,
             ConstraintSourceData[] newValue
-        )
-        {
-            DebugToast("old size: " + oldValue.Length + "new size: " + newValue.Length);
-            UpdateConstraintSources();
-        }
+        ) { }
 
-        protected override void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
+        protected override void OnAssetChanged()
         {
-            base.OnAssetChanged(oldValue, newValue);
-            DebugToast("Asset changed to " + newValue?.Name);
-            DestroyConstraint();
-            if (FindTargetTransform() == null)
-            {
-                return;
-            }
+            base.OnAssetChanged();
 
-            CreateConstraint();
+            DebugToast("Asset Changed to " + Asset.Name);
+            ParentConstraintNodeManager.RegisterNode(this);
         }
 
         protected override void OnGameObjectPathChanged(string oldValue, string newValue)
         {
             base.OnGameObjectPathChanged(oldValue, newValue);
-            DestroyConstraint();
+
             DebugToast("Path changed to " + newValue);
-            if (FindTargetTransform() == null)
-            {
-                return;
-            }
-
-            CreateConstraint();
+            ParentConstraintNodeManager.RegisterNode(this);
         }
 
-        protected void DestroyConstraint()
-        {
-            if (constraint != null)
-            {
-                DebugToast("Destroying existing constraint");
-                originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
-                UnityEngine.Object.Destroy((UnityEngine.Object)constraint);
-                constraint = null;
-            }
-        }
+        // protected void DestroyConstraint()
+        // {
+        //     if (constraint != null)
+        //     {
+        //         DebugToast("Destroying existing constraint");
+        //         originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
+        //         UnityEngine.Object.Destroy((UnityEngine.Object)constraint);
+        //         constraint = null;
+        //     }
+        // }
 
-        protected void CreateConstraint()
-        {
-            DebugToast("Creating new ParentConstraint on " + Transform().name);
-            originalTransform.CopyFromLocalTransform(Transform());
-            Transform().gameObject.AddComponent(typeof(ParentConstraint));
-            constraint = Transform().GetComponent<ParentConstraint>();
-            UpdateConstraintSources();
-            constraint.weight = Weight;
-            constraint.enabled = true;
-            constraint.constraintActive = true;
-        }
-
-        [FlowInput]
-        public Continuation UpdateSources()
-        {
-            UpdateConstraintSources();
-            return UpdateSourcesExit;
-        }
-
-        [FlowOutput]
-        [Label("Source Updated")]
-        public Continuation UpdateSourcesExit;
+        // protected void CreateConstraint()
+        // {
+        //     DebugToast("Creating new ParentConstraint on " + Transform().name);
+        //     originalTransform.CopyFromLocalTransform(Transform());
+        //     Transform().gameObject.AddComponent(typeof(ParentConstraint));
+        //     constraint = Transform().GetComponent<ParentConstraint>();
+        //     UpdateConstraintSources();
+        //     constraint.weight = Weight;
+        //     constraint.enabled = true;
+        //     constraint.constraintActive = true;
+        // }
 
         protected void UpdateConstraintSources()
         {
-            List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
-            if (ConstraintSourceDataList.Length == 0)
-            {
-                constraint.SetSources(sources);
-                originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
-                return;
-            }
+            // List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
+            // if (ConstraintSourceDataList.Length == 0)
+            // {
+            //     constraint.SetSources(sources);
+            //     originalTransform.ApplyAsLocalTransform(constraint.gameObject.transform);
+            //     return;
+            // }
 
-            for (int i = 0; i < ConstraintSourceDataList.Length; i++)
-            {
-                ConstraintSourceData constraintSourceData = ConstraintSourceDataList[i];
-                constraintSourceData.index = i;
-                constraintSourceData.constraintSourceDataParent = this;
+            // for (int i = 0; i < ConstraintSourceDataList.Length; i++)
+            // {
+            //     ConstraintSourceData constraintSourceData = ConstraintSourceDataList[i];
+            //     constraintSourceData.index = i;
+            //     constraintSourceData.constraintSourceDataParent = this;
 
-                UnityEngine.Animations.ConstraintSource source =
-                    new UnityEngine.Animations.ConstraintSource();
-                source.weight = constraintSourceData.Weight;
-                source.sourceTransform = constraintSourceData.FindTargetTransform();
-                sources.Add(source);
-            }
+            //     UnityEngine.Animations.ConstraintSource source =
+            //         new UnityEngine.Animations.ConstraintSource();
+            //     source.weight = constraintSourceData.Weight;
+            //     source.sourceTransform = constraintSourceData.FindTargetTransform();
+            //     sources.Add(source);
+            // }
 
-            constraint.SetSources(sources);
+            // constraint.SetSources(sources);
         }
 
         public void UpdateConstriantSource(ConstraintSourceData constraintSourceData)
         {
-            if (constraint != null)
-            {
-                UnityEngine.Animations.ConstraintSource constraintSource;
-                try
-                {
-                    constraintSource = constraint.GetSource(constraintSourceData.index);
-                }
-                catch (Exception e)
-                {
-                    return;
-                }
+            // if (constraint != null)
+            // {
+            //     UnityEngine.Animations.ConstraintSource constraintSource;
+            //     try
+            //     {
+            //         constraintSource = constraint.GetSource(constraintSourceData.index);
+            //     }
+            //     catch (Exception e)
+            //     {
+            //         return;
+            //     }
 
-                constraintSource.weight = constraintSourceData.Weight;
-                constraintSource.sourceTransform = constraintSourceData.FindTargetTransform();
-                // Since ConstraintSource is a struct, we have to put the whole thing back in
-                constraint.SetSource(constraintSourceData.index, constraintSource);
-            }
+            //     constraintSource.weight = constraintSourceData.Weight;
+            //     constraintSource.sourceTransform = constraintSourceData.FindTargetTransform();
+            //     // Since ConstraintSource is a struct, we have to put the whole thing back in
+            //     constraint.SetSource(constraintSourceData.index, constraintSource);
+            // }
         }
 
-        private bool DebugMode = false;
+        private bool DebugMode = true;
 
         private void DebugToast(string msg)
         {
