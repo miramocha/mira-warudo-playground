@@ -1,16 +1,3 @@
-// using System.Collections.Generic;
-// using System.Runtime.Remoting.Contexts;
-// using Cysharp.Threading.Tasks;
-// using UnityEngine;
-// using UnityEngine.Animations;
-// using Warudo.Core.Attributes;
-// using Warudo.Core.Data;
-// using Warudo.Core.Utils;
-// using Warudo.Plugins.Core.Assets;
-// using Warudo.Plugins.Core.Assets.Character;
-// using Warudo.Plugins.Core.Assets.Environment;
-// using Warudo.Plugins.Core.Utils;
-
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -25,15 +12,19 @@ using Warudo.Core.Server;
 using Warudo.Core.Utils;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Utils;
+using ParentConstraint = UnityEngine.Animations.ParentConstraint;
 
 namespace Warudo.Plugins.Scene.Assets;
 
 public class ConstraintStructuredData
     : StructuredData,
-        IConstraintStructuredData,
+        IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
     public string GetHeader() => Asset?.Name + '/' + GameObjectPath;
+
+    public ParentConstraint GetConstraint() =>
+        (ParentConstraint)FindTargetTransform()?.GetComponent<ParentConstraint>();
 
     [Trigger]
     [Label("Delete Constraint")]
@@ -117,28 +108,63 @@ public class ConstraintStructuredData
     [Disabled]
     public UnityParentConstraintsManagerAsset Manager;
 
-    public string ConstraintTransformID
+    public string AssetGameObjectPathID
     {
-        get { return ConstraintStructuredDataUtil.GetConstraintTransformID(this); }
+        get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
+
+    [Section("Constraint Sources", UnityConstraintUIOrdering.WEIGHT_INPUT + 1)]
+    [DataInput]
+    [Label("Sources")]
+    public ConstraintSourceStructuredData[] SourceStructuredData;
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
-        return await ConstraintStructuredDataUtil.AutoCompleteGameObjectPath(this);
+        return await GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
     }
 
     public Transform FindTargetTransform()
     {
-        return ConstraintStructuredDataUtil.FindTargetTransform(this);
+        return GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
 
     [Markdown]
     public string ConstraintInfo = "Constraint Info will appear here";
 
+    protected override void OnCreate()
+    {
+        base.OnCreate();
+        DebugToast("Structured data changed");
+        Watch<GameObjectAsset>(nameof(AssetInput), OnAssetInputChanged);
+        Watch<string>(nameof(GameObjectPathInput), OnGameObjectPathInputChanged);
+    }
+
+    protected void OnAssetInputChanged(GameObjectAsset oldValue, GameObjectAsset newValue) { }
+
+    protected void OnGameObjectPathInputChanged(string oldValue, string newValue)
+    {
+        DebugToast("Path changed");
+        // Assume that path is only set once manually on initialization
+        if (FindTargetTransform() != null && GetConstraint() == null)
+        {
+            FindTargetTransform().gameObject.AddComponent(typeof(ParentConstraint));
+        }
+    }
+
     protected override void OnUpdate()
     {
         base.OnUpdate();
         updateConstraintInfo();
+    }
+
+    protected override void OnDestroy()
+    {
+        DebugToast("Cleaning up...");
+        if (GetConstraint() != null)
+        {
+            UnityEngine.Object.Destroy((UnityEngine.Object)GetConstraint());
+        }
+        base.OnDestroy();
     }
 
     private void updateConstraintInfo()
@@ -148,8 +174,14 @@ public class ConstraintStructuredData
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
             "Manager Id: " + Manager?.IdString,
+            "Constraint: " + GetConstraint(),
         };
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
+    }
+
+    public void DebugToast(string msg)
+    {
+        Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", msg);
     }
 }

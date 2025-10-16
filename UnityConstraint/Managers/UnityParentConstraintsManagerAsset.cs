@@ -30,7 +30,7 @@ namespace Warudo.Plugins.Scene.Assets
                     ConstraintStructuredData structuredData in ConstraintStructuredDataArray.ToList<ConstraintStructuredData>()
                 )
                 {
-                    idSet.Add(structuredData.ConstraintTransformID);
+                    idSet.Add(structuredData.AssetGameObjectPathID);
                 }
 
                 return idSet;
@@ -90,6 +90,7 @@ namespace Warudo.Plugins.Scene.Assets
                 nameof(ConstraintStructuredDataArray),
                 OnConstraintStructuredDataArrayChanged
             );
+
         }
 
         protected virtual void OnConstraintStructuredDataArrayChanged(
@@ -112,7 +113,7 @@ namespace Warudo.Plugins.Scene.Assets
             structuredData.Asset = promptStructuredData.Asset;
             structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
             structuredData.Manager = this;
-            DebugLog("Manager Set");
+            DebugToast("Manager Set");
 
             List<ConstraintStructuredData> constraintStructuredDataList =
                 (List<ConstraintStructuredData>)
@@ -140,7 +141,7 @@ namespace Warudo.Plugins.Scene.Assets
                 errorMessages.Add("Transform not found!");
             }
 
-            if (constriantTransformIDSet.Contains(structuredData.ConstraintTransformID))
+            if (constriantTransformIDSet.Contains(structuredData.AssetGameObjectPathID))
             {
                 isValid = false;
                 DebugLog("Constraint already exists!");
@@ -174,11 +175,11 @@ namespace Warudo.Plugins.Scene.Assets
             ConstraintStructuredData constraintStructuredData
         )
         {
-            Debug.Log("Deleting: " + constraintStructuredData.ConstraintTransformID);
+            Debug.Log("Deleting: " + constraintStructuredData.AssetGameObjectPathID);
             List<ConstraintStructuredData> constraintStructureDataList =
                 ConstraintStructuredDataArray.ToList<ConstraintStructuredData>();
             constraintStructureDataList.RemoveAll(current =>
-                current.ConstraintTransformID == constraintStructuredData.ConstraintTransformID
+                current.AssetGameObjectPathID == constraintStructuredData.AssetGameObjectPathID
             );
 
             SetDataInput(
@@ -187,53 +188,5 @@ namespace Warudo.Plugins.Scene.Assets
                 broadcast: true
             );
         }
-
-
-        // private static Dictionary<string, ParentConstraintModel> gameObjectIdToModel =
-        //     new Dictionary<string, ParentConstraintModel>();
-        // private static Dictionary<string, string> nodeIdToGameObjectId =
-        //     new Dictionary<string, string>();
-
-        // // gets called when create/asset selection
-        // public static void RegisterNode(ParentConstraintNode node)
-        // {
-        //     GameObject gameObject = node.FindTargetTransform()?.gameObject;
-        //     string gameObjectId = gameObject?.GetInstanceID().ToString();
-        //     string previousGameObjectId;
-
-        //     // If node is already registered before, we have to first remove it from a model
-        //     if (nodeIdToGameObjectId.TryGetValue(node.IdString, out previousGameObjectId))
-        //     {
-        //         // If registered node has changed gameobject, then we remove it from model
-        //         if (gameObjectId != previousGameObjectId)
-        //         {
-        //             // Assume that if first map has the node id then model already exists for previousGameObjectId
-        //             ParentConstraintModel previousModel;
-        //             gameObjectIdToModel.TryGetValue(gameObjectId, out previousModel);
-
-        //             if (previousModel != null)
-        //             {
-        //                 previousModel.RemoveNode(node.IdString);
-        //             }
-        //         }
-        //         // If registered node has the same gameobject, then we do nothing
-        //         else
-        //         {
-        //             return;
-        //         }
-        //     }
-
-        //     nodeIdToGameObjectId[node.IdString] = gameObjectId;
-        //     ParentConstraintModel model;
-        //     gameObjectIdToModel.TryGetValue(gameObjectId, out model);
-
-        //     if (model == null)
-        //     {
-        //         model = new ParentConstraintModel(gameObject);
-        //         model.ConstraintNodes.Add(node);
-        //     }
     }
-
-    // gets called when deleted
-    // public static void DeregisterNode(ParentConstraintNode parentConstraintNode) { }
 }

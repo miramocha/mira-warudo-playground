@@ -12,10 +12,10 @@ using Warudo.Plugins.Core.Utils;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public static class ConstraintStructuredDataUtil
+public static class GameObjectComponentStructuredDataUtil
 {
     public static async UniTask<AutoCompleteList> AutoCompleteGameObjectPath(
-        IConstraintStructuredData structuredData
+        IGameObjectComponentStructuredData structuredData
     )
     {
         GameObjectAsset asset = structuredData.Asset;
@@ -38,7 +38,7 @@ public static class ConstraintStructuredDataUtil
         return Transforms.AutoCompleteTransformChildren(asset.GameObject.transform);
     }
 
-    public static Transform FindTargetTransform(IConstraintStructuredData structuredData)
+    public static Transform FindTargetTransform(IGameObjectComponentStructuredData structuredData)
     {
         GameObjectAsset asset = structuredData.Asset;
         if (asset.IsNullOrInactive())
@@ -60,7 +60,9 @@ public static class ConstraintStructuredDataUtil
         return asset.GameObject.transform.Find(text);
     }
 
-    public static string GetConstraintTransformID(IConstraintStructuredData structuredData)
+    public static string GetGameObjectComponentPathID(
+        IGameObjectComponentStructuredData structuredData
+    )
     {
         return structuredData.Asset?.IdString + "||" + structuredData.GameObjectPath;
     }
