@@ -75,16 +75,16 @@ namespace Warudo.Plugins.Scene.Assets
             addConstraintStructuredData(promptStructuredData);
         }
 
-        [Trigger]
-        public void RefreshAllConstraints()
-        {
-            foreach (
-                ConstraintStructuredData ConstraintStructuredData in ConstraintStructuredDataArray
-            )
-            {
-                ConstraintStructuredData.RefreshConstraint();
-            }
-        }
+        // [Trigger]
+        // public void RefreshAllConstraints()
+        // {
+        //     foreach (
+        //         ConstraintStructuredData ConstraintStructuredData in ConstraintStructuredDataArray
+        //     )
+        //     {
+        //         ConstraintStructuredData.RefreshConstraint();
+        //     }
+        // }
 
         [Section("🔗 Active Constraints")]
         [DataInput]
