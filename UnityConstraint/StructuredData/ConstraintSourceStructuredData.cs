@@ -16,7 +16,7 @@ using Warudo.Plugins.Core.Utils;
 namespace Warudo.Plugins.Scene.Assets;
 
 public class ConstraintSourceStructuredData
-    : StructuredData,
+    : StructuredData<ConstraintStructuredData>,
         IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
@@ -24,24 +24,25 @@ public class ConstraintSourceStructuredData
 
     [DataInput]
     [Label("ASSET")]
-    public GameObjectAsset AssetInput;
-    public GameObjectAsset Asset
+    public GameObjectAsset Asset;
+
+    public GameObjectAsset GetAsset()
     {
-        get { return AssetInput; }
-        set { SetDataInput(nameof(AssetInput), value, broadcast: true); }
+        return Asset;
     }
 
     [DataInput]
     [AutoComplete("AutoCompleteGameObjectPath", false, "")]
     [Label("GAMEOBJECT_PATH")]
-    public string GameObjectPathInput;
-    public string GameObjectPath
+    public string GameObjectPath;
+
+    public string GetGameObjectPath()
     {
-        get { return GameObjectPathInput; }
-        set { SetDataInput(nameof(GameObjectPathInput), value, broadcast: true); }
+        return GameObjectPath;
     }
 
-    [Section("Settings", UnityConstraintUIOrdering.WEIGHT_INPUT - 1)]
+    [Section("Settings")]
+    [DataInput]
     [Label("Weight")]
     [FloatSlider(0, 1)]
     public float Weight = 1.0f;
@@ -56,13 +57,24 @@ public class ConstraintSourceStructuredData
         return GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
 
-    public string AssetGameObjectPathID
+    public string GameObjectComponentPathID
     {
         get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
 
     [Markdown]
     public string ConstraintSourceInfo = "Constraint Info will appear here";
+
+    protected override void OnCreate()
+    {
+        base.OnCreate();
+        WatchAll(new[] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) }, OnDataChanged);
+    }
+
+    protected void OnDataChanged()
+    {
+        Parent.UpdateConstraintSources();
+    }
 
     protected override void OnUpdate()
     {
@@ -75,7 +87,7 @@ public class ConstraintSourceStructuredData
         List<string> infoLines = new List<string>
         {
             "Asset Id: " + Asset?.IdString,
-            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID()
+            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
         };
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintSourceInfo), newInfo, broadcast: true);

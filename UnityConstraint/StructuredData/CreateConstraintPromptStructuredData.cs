@@ -17,22 +17,22 @@ public class CreateConstraintPromptStructuredData
 {
     [DataInput]
     [Label("ASSET")]
-    public GameObjectAsset AssetInput;
-    public GameObjectAsset Asset
+    public GameObjectAsset Asset;
+
+    public GameObjectAsset GetAsset()
     {
-        get { return AssetInput; }
-        set { SetDataInput(nameof(AssetInput), value, broadcast: true); }
+        return Asset;
     }
 
     [DataInput]
     [AutoComplete("AutoCompleteGameObjectPath", false, "")]
     [Label("GAMEOBJECT_PATH")]
     [Description("LEAVE_EMPTY_TO_TARGET_THE_ROOT_GAMEOBJECT")]
-    public string GameObjectPathInput;
-    public string GameObjectPath
+    public string GameObjectPath;
+
+    public string GetGameObjectPath()
     {
-        get { return GameObjectPathInput; }
-        set { SetDataInput(nameof(GameObjectPathInput), value, broadcast: true); }
+        return GameObjectPath;
     }
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
@@ -45,7 +45,7 @@ public class CreateConstraintPromptStructuredData
         return GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
 
-    public string AssetGameObjectPathID
+    public string GameObjectComponentPathID
     {
         get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }

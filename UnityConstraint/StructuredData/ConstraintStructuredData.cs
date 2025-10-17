@@ -17,17 +17,19 @@ using ParentConstraint = UnityEngine.Animations.ParentConstraint;
 namespace Warudo.Plugins.Scene.Assets;
 
 public class ConstraintStructuredData
-    : StructuredData,
+    : StructuredData<UnityParentConstraintsManagerAsset>,
         IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
     public string GetHeader() => Asset?.Name + '/' + GameObjectPath;
 
-    public ParentConstraint GetConstraint() =>
-        (ParentConstraint)FindTargetTransform()?.GetComponent<ParentConstraint>();
+    public ParentConstraint Constraint
+    {
+        get { return (ParentConstraint)FindTargetTransform()?.GetComponent<ParentConstraint>(); }
+    }
 
     [Trigger]
-    [Label("Delete Constraint")]
+    [Label("Delete")]
     public async void ConfirmDelete()
     {
         bool confirmed = await Context.Service.PromptConfirmation(
@@ -37,55 +39,62 @@ public class ConstraintStructuredData
 
         if (confirmed == true)
         {
-            Manager.DeleteConstraintStructuredData(this);
+            Parent.DeleteConstraintStructuredData(this);
         }
+    }
+
+    [Trigger]
+    [Label("Refresh")]
+    public void RefreshConstraint()
+    {
+        CreateConstraint();
     }
 
     [DataInput]
     [Label("ASSET")]
     [Disabled]
-    public GameObjectAsset AssetInput;
-    public GameObjectAsset Asset
+    public GameObjectAsset Asset;
+
+    public GameObjectAsset GetAsset()
     {
-        get { return AssetInput; }
-        set { SetDataInput(nameof(AssetInput), value, broadcast: true); }
+        return Asset;
     }
 
     [DataInput]
     [AutoComplete("AutoCompleteGameObjectPath", false, "")]
     [Label("GAMEOBJECT_PATH")]
     [Disabled]
-    public string GameObjectPathInput;
-    public string GameObjectPath
+    public string GameObjectPath;
+
+    public string GetGameObjectPath()
     {
-        get { return GameObjectPathInput; }
-        set { SetDataInput(nameof(GameObjectPathInput), value, broadcast: true); }
+        return GameObjectPath;
     }
 
-    [Section("Settings", UnityConstraintUIOrdering.WEIGHT_INPUT - 1)]
-    [DataInput(UnityConstraintUIOrdering.WEIGHT_INPUT)]
+    [Section("Settings")]
+    [DataInput]
     [Label("Weight")]
     [FloatSlider(0, 1)]
     public float Weight = 1.0f;
 
-    [DataInput(UnityConstraintUIOrdering.POSITION_AT_REST_INPUT)]
+    [DataInput]
     [Label("Position At Rest")]
     public Vector3 ConstraintPositionAtRest = Vector3.zero;
 
-    [DataInput(UnityConstraintUIOrdering.ROTATION_AT_REST_INPUT)]
+    [DataInput]
     [Label("Rotation At Rest")]
     public Vector3 ConstraintRotationAtRest = Vector3.zero;
 
-    [Section("Freeze Rotation Axes", UnityConstraintUIOrdering.FREEZE_ROTATION_SECTION)]
-    [DataInput(UnityConstraintUIOrdering.FREEZE_ROTATION_X_INPUT)]
+    [Section("Freeze Rotation Axes")]
+    [DataInput]
     [Label("X Axis")]
     public bool FreezeRotationX = true;
 
-    [DataInput(UnityConstraintUIOrdering.FREEZE_ROTATION_Y_INPUT)]
+    [DataInput]
     [Label("Y Axis")]
     public bool FreezeRotationY = true;
 
-    [DataInput(UnityConstraintUIOrdering.FREEZE_ROTATION_Z_INPUT)]
+    [DataInput]
     [Label("Z Axis")]
     public bool FreezeRotationZ = true;
     public Axis FreezeRotationAxes
@@ -103,12 +112,34 @@ public class ConstraintStructuredData
         }
     }
 
+    [Section("Freeze Position Axes")]
     [DataInput]
-    [Hidden]
-    [Disabled]
-    public UnityParentConstraintsManagerAsset Manager;
+    [Label("X Axis")]
+    public bool FreezePositionX = true;
 
-    public string AssetGameObjectPathID
+    [DataInput]
+    [Label("Y Axis")]
+    public bool FreezePositionY = true;
+
+    [DataInput]
+    [Label("Z Axis")]
+    public bool FreezePositionZ = true;
+    public Axis FreezePositionAxes
+    {
+        get
+        {
+            Axis axes = Axis.None;
+            if (FreezePositionX)
+                axes |= Axis.X;
+            if (FreezePositionY)
+                axes |= Axis.Y;
+            if (FreezePositionZ)
+                axes |= Axis.Z;
+            return axes;
+        }
+    }
+
+    public string GameObjectComponentPathID
     {
         get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
@@ -116,7 +147,7 @@ public class ConstraintStructuredData
     [Section("Constraint Sources", UnityConstraintUIOrdering.WEIGHT_INPUT + 1)]
     [DataInput]
     [Label("Sources")]
-    public ConstraintSourceStructuredData[] SourceStructuredData;
+    public ConstraintSourceStructuredData[] ConstraintSourceStructuredDataList;
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
@@ -134,20 +165,65 @@ public class ConstraintStructuredData
     protected override void OnCreate()
     {
         base.OnCreate();
-        DebugToast("Structured data changed");
-        Watch<GameObjectAsset>(nameof(AssetInput), OnAssetInputChanged);
-        Watch<string>(nameof(GameObjectPathInput), OnGameObjectPathInputChanged);
+        Watch<GameObjectAsset>(nameof(Asset), OnAssetChanged);
+        Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
+        Watch<float>(nameof(Weight), OnWeightChanged);
+        Watch<ConstraintSourceStructuredData[]>(
+            nameof(ConstraintSourceStructuredDataList),
+            OnConstraintSourceStructuredDataListChanged
+        );
     }
 
-    protected void OnAssetInputChanged(GameObjectAsset oldValue, GameObjectAsset newValue) { }
+    // protected override void OnAssignedParent()
+    // {
+    //     base.OnAssignedParent();
+    //     CreateConstraint();
+    // }
 
-    protected void OnGameObjectPathInputChanged(string oldValue, string newValue)
+    protected void OnWeightChanged(float oldValue, float newValue)
+    {
+        if (Constraint != null)
+        {
+            Constraint.weight = newValue;
+        }
+    }
+
+    protected void OnConstraintSourceStructuredDataListChanged(
+        ConstraintSourceStructuredData[] oldValue,
+        ConstraintSourceStructuredData[] newValue
+    )
+    {
+        UpdateConstraintSources();
+    }
+
+    protected void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
+    {
+        DebugToast("Asset changed");
+        CreateConstraint();
+    }
+
+    protected void OnGameObjectPathChanged(string oldValue, string newValue)
     {
         DebugToast("Path changed");
-        // Assume that path is only set once manually on initialization
-        if (FindTargetTransform() != null && GetConstraint() == null)
+        CreateConstraint();
+    }
+
+    protected void CreateConstraint()
+    {
+        if (FindTargetTransform() == null)
         {
+            DebugToast("Transform is null");
+        }
+
+        if (FindTargetTransform() != null && Constraint == null)
+        {
+            DebugToast("Adding Constraint");
             FindTargetTransform().gameObject.AddComponent(typeof(ParentConstraint));
+            Constraint.enabled = true;
+            Constraint.constraintActive = true;
+            // Save rest position and rotation
+            originalTransformData.CopyFromLocalTransform(FindTargetTransform());
+            UpdateConstraintSources();
         }
     }
 
@@ -159,12 +235,45 @@ public class ConstraintStructuredData
 
     protected override void OnDestroy()
     {
-        DebugToast("Cleaning up...");
-        if (GetConstraint() != null)
+        if (Constraint != null)
         {
-            UnityEngine.Object.Destroy((UnityEngine.Object)GetConstraint());
+            DebugToast("Cleaning up...");
+            originalTransformData.ApplyAsLocalTransform(FindTargetTransform());
+            UnityEngine.Object.Destroy((UnityEngine.Object)Constraint);
         }
         base.OnDestroy();
+    }
+
+    private TransformData originalTransformData = StructuredData.Create<TransformData>();
+
+    public void UpdateConstraintSources()
+    {
+        List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
+
+        if (ConstraintSourceStructuredDataList.Length == 0)
+        {
+            Constraint.SetSources(sources);
+            originalTransformData.ApplyAsLocalTransform(Constraint.gameObject.transform);
+            return;
+        }
+
+        foreach (
+            ConstraintSourceStructuredData sourceStructuredData in ConstraintSourceStructuredDataList
+        )
+        {
+            Transform sourceTransform = sourceStructuredData.FindTargetTransform();
+
+            if (sourceTransform != null)
+            {
+                UnityEngine.Animations.ConstraintSource source =
+                    new UnityEngine.Animations.ConstraintSource();
+                source.weight = sourceStructuredData.Weight;
+                source.sourceTransform = sourceTransform;
+                sources.Add(source);
+            }
+        }
+
+        Constraint.SetSources(sources);
     }
 
     private void updateConstraintInfo()
@@ -173,8 +282,9 @@ public class ConstraintStructuredData
         {
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
-            "Manager Id: " + Manager?.IdString,
-            "Constraint: " + GetConstraint(),
+            "Original Transform Data: " + originalTransformData,
+            "Constraint: " + Constraint,
+            "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
         };
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);

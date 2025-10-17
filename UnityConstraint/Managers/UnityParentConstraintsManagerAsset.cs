@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Warudo.Core;
@@ -30,14 +31,14 @@ namespace Warudo.Plugins.Scene.Assets
                     ConstraintStructuredData structuredData in ConstraintStructuredDataArray.ToList<ConstraintStructuredData>()
                 )
                 {
-                    idSet.Add(structuredData.AssetGameObjectPathID);
+                    idSet.Add(structuredData.GameObjectComponentPathID);
                 }
 
                 return idSet;
             }
         }
 
-        [Section("➕ Create Constraint")]
+        [Section("Manage Constraint")]
         [Trigger]
         public async void CreateConstraint()
         {
@@ -76,6 +77,17 @@ namespace Warudo.Plugins.Scene.Assets
             // Retry prompt if gameobject transform is null or gameobject id is already in map
         }
 
+        [Trigger]
+        public void RefreshAllConstraints()
+        {
+            foreach (
+                ConstraintStructuredData ConstraintStructuredData in ConstraintStructuredDataArray
+            )
+            {
+                ConstraintStructuredData.RefreshConstraint();
+            }
+        }
+
         [Section("🔗 Active Constraints")]
         [DataInput]
         [Label("Constraints")]
@@ -90,7 +102,6 @@ namespace Warudo.Plugins.Scene.Assets
                 nameof(ConstraintStructuredDataArray),
                 OnConstraintStructuredDataArrayChanged
             );
-
         }
 
         protected virtual void OnConstraintStructuredDataArrayChanged(
@@ -112,8 +123,7 @@ namespace Warudo.Plugins.Scene.Assets
                 StructuredData.Create<ConstraintStructuredData>();
             structuredData.Asset = promptStructuredData.Asset;
             structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
-            structuredData.Manager = this;
-            DebugToast("Manager Set");
+            structuredData.Broadcast();
 
             List<ConstraintStructuredData> constraintStructuredDataList =
                 (List<ConstraintStructuredData>)
@@ -141,7 +151,7 @@ namespace Warudo.Plugins.Scene.Assets
                 errorMessages.Add("Transform not found!");
             }
 
-            if (constriantTransformIDSet.Contains(structuredData.AssetGameObjectPathID))
+            if (constriantTransformIDSet.Contains(structuredData.GameObjectComponentPathID))
             {
                 isValid = false;
                 DebugLog("Constraint already exists!");
@@ -175,11 +185,12 @@ namespace Warudo.Plugins.Scene.Assets
             ConstraintStructuredData constraintStructuredData
         )
         {
-            Debug.Log("Deleting: " + constraintStructuredData.AssetGameObjectPathID);
+            Debug.Log("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
             List<ConstraintStructuredData> constraintStructureDataList =
-                ConstraintStructuredDataArray.ToList<ConstraintStructuredData>();
+                ConstraintStructuredDataArray.ToList();
             constraintStructureDataList.RemoveAll(current =>
-                current.AssetGameObjectPathID == constraintStructuredData.AssetGameObjectPathID
+                current.GameObjectComponentPathID
+                == constraintStructuredData.GameObjectComponentPathID
             );
 
             SetDataInput(

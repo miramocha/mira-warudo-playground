@@ -18,7 +18,7 @@ public static class GameObjectComponentStructuredDataUtil
         IGameObjectComponentStructuredData structuredData
     )
     {
-        GameObjectAsset asset = structuredData.Asset;
+        GameObjectAsset asset = structuredData.GetAsset();
 
         if (asset == null || !asset.Active)
         {
@@ -40,13 +40,13 @@ public static class GameObjectComponentStructuredDataUtil
 
     public static Transform FindTargetTransform(IGameObjectComponentStructuredData structuredData)
     {
-        GameObjectAsset asset = structuredData.Asset;
+        GameObjectAsset asset = structuredData.GetAsset();
         if (asset.IsNullOrInactive())
         {
             return null;
         }
 
-        string text = structuredData.GameObjectPath ?? "";
+        string text = structuredData.GetGameObjectPath() ?? "";
         if (asset is EnvironmentAsset environmentAsset)
         {
             return environmentAsset.GetSceneTransform(text);
@@ -64,6 +64,6 @@ public static class GameObjectComponentStructuredDataUtil
         IGameObjectComponentStructuredData structuredData
     )
     {
-        return structuredData.Asset?.IdString + "||" + structuredData.GameObjectPath;
+        return structuredData.GetAsset()?.IdString + "||" + structuredData.GetGameObjectPath();
     }
 }
