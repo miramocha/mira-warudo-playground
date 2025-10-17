@@ -98,16 +98,16 @@ namespace Warudo.Plugins.Scene.Assets
         {
             base.OnCreate();
             SetActive(true);
-            Watch<ConstraintStructuredData[]>(
-                nameof(ConstraintStructuredDataArray),
-                OnConstraintStructuredDataArrayChanged
-            );
+            // Watch<ConstraintStructuredData[]>(
+            //     nameof(ConstraintStructuredDataArray),
+            //     OnConstraintStructuredDataArrayChanged
+            // );
         }
 
-        protected virtual void OnConstraintStructuredDataArrayChanged(
-            ConstraintStructuredData[] oldValue,
-            ConstraintStructuredData[] newValue
-        ) { }
+        // protected virtual void OnConstraintStructuredDataArrayChanged(
+        //     ConstraintStructuredData[] oldValue,
+        //     ConstraintStructuredData[] newValue
+        // ) { }
 
         protected override void OnDestroy()
         {
@@ -124,6 +124,7 @@ namespace Warudo.Plugins.Scene.Assets
             structuredData.Asset = promptStructuredData.Asset;
             structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
             structuredData.Broadcast();
+            structuredData.CreateConstraint();
 
             List<ConstraintStructuredData> constraintStructuredDataList =
                 (List<ConstraintStructuredData>)

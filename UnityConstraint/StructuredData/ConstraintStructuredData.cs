@@ -168,7 +168,16 @@ public class ConstraintStructuredData
         DebugToast("On create");
         WatchAsset(
             nameof(Asset),
+            // () =>
             delegate
+            {
+                CreateConstraint();
+            }
+        );
+        Watch<GameObjectAsset>(
+            nameof(Asset),
+            delegate
+            // (GameObjectAsset oldValue, GameObjectAsset newValue) =>
             {
                 CreateConstraint();
             }
@@ -176,6 +185,7 @@ public class ConstraintStructuredData
         Watch<string>(
             nameof(GameObjectPath),
             delegate
+            // (string oldValue, string newValue) =>
             {
                 CreateConstraint();
             }
@@ -196,7 +206,7 @@ public class ConstraintStructuredData
         );
     }
 
-    protected void CreateConstraint()
+    public void CreateConstraint()
     {
         if (FindTargetTransform() == null)
         {

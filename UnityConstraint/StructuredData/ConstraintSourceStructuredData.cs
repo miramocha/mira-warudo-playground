@@ -68,12 +68,13 @@ public class ConstraintSourceStructuredData
     protected override void OnCreate()
     {
         base.OnCreate();
-        WatchAll(new[] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) }, OnDataChanged);
-    }
-
-    protected void OnDataChanged()
-    {
-        Parent.ApplyConstraintSources();
+        WatchAll(
+            new[] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) },
+            delegate
+            {
+                Parent.ApplyConstraintSources();
+            }
+        );
     }
 
     protected override void OnUpdate()
