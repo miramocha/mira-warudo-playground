@@ -73,8 +73,6 @@ namespace Warudo.Plugins.Scene.Assets
 
             DebugLog("Structured Data Valid");
             addConstraintStructuredData(promptStructuredData);
-
-            // Retry prompt if gameobject transform is null or gameobject id is already in map
         }
 
         [Trigger]
@@ -98,21 +96,11 @@ namespace Warudo.Plugins.Scene.Assets
         {
             base.OnCreate();
             SetActive(true);
-            // Watch<ConstraintStructuredData[]>(
-            //     nameof(ConstraintStructuredDataArray),
-            //     OnConstraintStructuredDataArrayChanged
-            // );
         }
-
-        // protected virtual void OnConstraintStructuredDataArrayChanged(
-        //     ConstraintStructuredData[] oldValue,
-        //     ConstraintStructuredData[] newValue
-        // ) { }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            // Cleanup: delete constraints and set all transform to rest position
         }
 
         private void addConstraintStructuredData(
@@ -125,11 +113,9 @@ namespace Warudo.Plugins.Scene.Assets
             structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
             structuredData.CreateConstraint();
             structuredData.Parent = this;
-            structuredData.Broadcast();
 
             List<ConstraintStructuredData> constraintStructuredDataList =
-                (List<ConstraintStructuredData>)
-                    ConstraintStructuredDataArray.ToList<ConstraintStructuredData>();
+                ConstraintStructuredDataArray.ToList();
             constraintStructuredDataList.Add(structuredData);
 
             SetDataInput(
@@ -137,6 +123,7 @@ namespace Warudo.Plugins.Scene.Assets
                 constraintStructuredDataList.ToArray(),
                 broadcast: true
             );
+            structuredData.Broadcast();
         }
 
         private bool validatePromptConstraintStructuredData(

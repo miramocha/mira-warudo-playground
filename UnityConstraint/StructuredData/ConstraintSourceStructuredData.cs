@@ -89,6 +89,7 @@ public class ConstraintSourceStructuredData
         {
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
+            "Parent ID: " + Parent?.IdString,
         };
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintSourceInfo), newInfo, broadcast: true);

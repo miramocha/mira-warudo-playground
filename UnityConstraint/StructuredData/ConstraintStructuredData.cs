@@ -170,7 +170,6 @@ public class ConstraintStructuredData
         DebugToast("On create");
         WatchAsset(
             nameof(Asset),
-            // () =>
             delegate
             {
                 CreateConstraint();
@@ -179,7 +178,6 @@ public class ConstraintStructuredData
         Watch<GameObjectAsset>(
             nameof(Asset),
             delegate
-            // (GameObjectAsset oldValue, GameObjectAsset newValue) =>
             {
                 CreateConstraint();
             }
@@ -187,7 +185,6 @@ public class ConstraintStructuredData
         Watch<string>(
             nameof(GameObjectPath),
             delegate
-            // (string oldValue, string newValue) =>
             {
                 CreateConstraint();
             }
@@ -221,7 +218,6 @@ public class ConstraintStructuredData
             FindTargetTransform().gameObject.AddComponent(typeof(ParentConstraint));
             Constraint.enabled = true;
             Constraint.constraintActive = true;
-            // Save rest position and rotation
             originalTransformData.CopyFromLocalTransform(FindTargetTransform());
             ApplyConstraintSources();
         }
