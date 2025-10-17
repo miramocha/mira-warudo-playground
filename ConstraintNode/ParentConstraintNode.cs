@@ -54,7 +54,7 @@ namespace Warudo.Plugins.Core.Nodes
             base.OnCreate();
             // Watch<float>(nameof(Weight), OnWeightChanged);
             // Watch<ConstraintSourceData[]>(
-            //     nameof(ConstraintSourceDataList),W
+            //     nameof(ConstraintSourceDataList),
             //     OnConstraintSourceDataListChanged
             // );
         }
@@ -105,13 +105,13 @@ namespace Warudo.Plugins.Core.Nodes
         //     originalTransform.CopyFromLocalTransform(Transform());
         //     Transform().gameObject.AddComponent(typeof(ParentConstraint));
         //     constraint = Transform().GetComponent<ParentConstraint>();
-        //     UpdateConstraintSources();
+        //     ApplyConstraintSources();
         //     constraint.weight = Weight;
         //     constraint.enabled = true;
         //     constraint.constraintActive = true;
         // }
 
-        protected void UpdateConstraintSources()
+        protected void ApplyConstraintSources()
         {
             // List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
             // if (ConstraintSourceDataList.Length == 0)

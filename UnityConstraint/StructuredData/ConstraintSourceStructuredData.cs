@@ -73,16 +73,16 @@ public class ConstraintSourceStructuredData
 
     protected void OnDataChanged()
     {
-        Parent.UpdateConstraintSources();
+        Parent.ApplyConstraintSources();
     }
 
     protected override void OnUpdate()
     {
         base.OnUpdate();
-        updateConstraintInfo();
+        updateConstraintDebugInfo();
     }
 
-    private void updateConstraintInfo()
+    private void updateConstraintDebugInfo()
     {
         List<string> infoLines = new List<string>
         {

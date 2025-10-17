@@ -165,47 +165,35 @@ public class ConstraintStructuredData
     protected override void OnCreate()
     {
         base.OnCreate();
-        Watch<GameObjectAsset>(nameof(Asset), OnAssetChanged);
-        Watch<string>(nameof(GameObjectPath), OnGameObjectPathChanged);
-        Watch<float>(nameof(Weight), OnWeightChanged);
+        DebugToast("On create");
+        WatchAsset(
+            nameof(Asset),
+            delegate
+            {
+                CreateConstraint();
+            }
+        );
+        Watch<string>(
+            nameof(GameObjectPath),
+            delegate
+            {
+                CreateConstraint();
+            }
+        );
+        Watch<float>(
+            nameof(Weight),
+            delegate(float oldValue, float newValue)
+            {
+                Constraint.weight = newValue;
+            }
+        );
         Watch<ConstraintSourceStructuredData[]>(
             nameof(ConstraintSourceStructuredDataList),
-            OnConstraintSourceStructuredDataListChanged
+            delegate
+            {
+                ApplyConstraintSources();
+            }
         );
-    }
-
-    // protected override void OnAssignedParent()
-    // {
-    //     base.OnAssignedParent();
-    //     CreateConstraint();
-    // }
-
-    protected void OnWeightChanged(float oldValue, float newValue)
-    {
-        if (Constraint != null)
-        {
-            Constraint.weight = newValue;
-        }
-    }
-
-    protected void OnConstraintSourceStructuredDataListChanged(
-        ConstraintSourceStructuredData[] oldValue,
-        ConstraintSourceStructuredData[] newValue
-    )
-    {
-        UpdateConstraintSources();
-    }
-
-    protected void OnAssetChanged(GameObjectAsset oldValue, GameObjectAsset newValue)
-    {
-        DebugToast("Asset changed");
-        CreateConstraint();
-    }
-
-    protected void OnGameObjectPathChanged(string oldValue, string newValue)
-    {
-        DebugToast("Path changed");
-        CreateConstraint();
     }
 
     protected void CreateConstraint()
@@ -223,14 +211,14 @@ public class ConstraintStructuredData
             Constraint.constraintActive = true;
             // Save rest position and rotation
             originalTransformData.CopyFromLocalTransform(FindTargetTransform());
-            UpdateConstraintSources();
+            ApplyConstraintSources();
         }
     }
 
     protected override void OnUpdate()
     {
         base.OnUpdate();
-        updateConstraintInfo();
+        updateConstraintDebugInfo();
     }
 
     protected override void OnDestroy()
@@ -246,7 +234,7 @@ public class ConstraintStructuredData
 
     private TransformData originalTransformData = StructuredData.Create<TransformData>();
 
-    public void UpdateConstraintSources()
+    public void ApplyConstraintSources()
     {
         List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
 
@@ -276,7 +264,7 @@ public class ConstraintStructuredData
         Constraint.SetSources(sources);
     }
 
-    private void updateConstraintInfo()
+    private void updateConstraintDebugInfo()
     {
         List<string> infoLines = new List<string>
         {
