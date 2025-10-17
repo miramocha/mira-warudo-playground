@@ -123,8 +123,9 @@ namespace Warudo.Plugins.Scene.Assets
                 StructuredData.Create<ConstraintStructuredData>();
             structuredData.Asset = promptStructuredData.Asset;
             structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
-            structuredData.Broadcast();
             structuredData.CreateConstraint();
+            structuredData.Parent = this;
+            structuredData.Broadcast();
 
             List<ConstraintStructuredData> constraintStructuredDataList =
                 (List<ConstraintStructuredData>)
@@ -175,6 +176,7 @@ namespace Warudo.Plugins.Scene.Assets
         {
             List<string> debugInfoLines = new List<string>
             {
+                "Manager ID: " + IdString,
                 "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
                 "total constraint: " + ConstraintStructuredDataArray.Length,
             };
@@ -186,7 +188,7 @@ namespace Warudo.Plugins.Scene.Assets
             ConstraintStructuredData constraintStructuredData
         )
         {
-            Debug.Log("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
+            DebugToast("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
             List<ConstraintStructuredData> constraintStructureDataList =
                 ConstraintStructuredDataArray.ToList();
             constraintStructureDataList.RemoveAll(current =>

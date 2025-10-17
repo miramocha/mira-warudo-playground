@@ -37,8 +37,10 @@ public class ConstraintStructuredData
             "Deleting this constraint?"
         );
 
+        DebugToast("Comfirming Deletion");
         if (confirmed == true)
         {
+            DebugToast("Deletion Confirmed");
             Parent.DeleteConstraintStructuredData(this);
         }
     }
@@ -283,6 +285,7 @@ public class ConstraintStructuredData
             "Original Transform Data: " + originalTransformData,
             "Constraint: " + Constraint,
             "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
+            "Parent ID: " + Parent?.IdString,
         };
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
