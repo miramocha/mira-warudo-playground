@@ -18,7 +18,7 @@ using ParentConstraint = UnityEngine.Animations.ParentConstraint;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public class ML_ConstraintStructuredData
+public class ML_UnityParentConstraintStructuredData
     : StructuredData<ML_UnityParentConstraintsManagerAsset>,
         ML_IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
@@ -206,6 +206,7 @@ public class ML_ConstraintStructuredData
             nameof(UnityConstraintSourceStructuredDataList),
             delegate
             {
+                // ML_DebugUtil.ToastDebug("Parent source change received.");
                 ApplyConstraintSources();
             }
         );
@@ -225,8 +226,9 @@ public class ML_ConstraintStructuredData
             Constraint.enabled = true;
             Constraint.constraintActive = true;
             originalTransformData.CopyFromLocalTransform(FindTargetTransform());
-            ApplyConstraintSources();
         }
+
+        ApplyConstraintSources();
     }
 
     protected override void OnDestroy()
@@ -248,7 +250,8 @@ public class ML_ConstraintStructuredData
 
         if (UnityConstraintSourceStructuredDataList.Length == 0)
         {
-            Constraint.SetSources(sources);
+            ML_DebugUtil.ToastDebug("Source list is empty");
+            Constraint?.SetSources(sources);
             originalTransformData.ApplyAsLocalTransform(Constraint.gameObject.transform);
             return;
         }
@@ -285,6 +288,7 @@ public class ML_ConstraintStructuredData
     {
         List<string> infoLines = new List<string>
         {
+            "Id: " + Id,
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
             "Original Transform Data: " + originalTransformData,

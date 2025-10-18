@@ -17,7 +17,7 @@ using Warudo.Plugins.Core.Utils;
 namespace Warudo.Plugins.Scene.Assets;
 
 public class ML_UnityConstraintSourceStructuredData
-    : StructuredData<ML_ConstraintStructuredData>,
+    : StructuredData<ML_UnityParentConstraintStructuredData>,
         ML_IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
@@ -70,9 +70,17 @@ public class ML_UnityConstraintSourceStructuredData
             new[] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) },
             delegate
             {
-                Parent.ApplyConstraintSources();
+                // ML_DebugUtil.ToastDebug("Source changed, Parent: " + Parent.IdString);
+                Parent?.ApplyConstraintSources();
             }
         );
+    }
+
+    protected override void OnAssignedParent()
+    {
+        base.OnAssignedParent();
+        ML_DebugUtil.ToastDebug("Source parent On assigned: " + Parent.IdString);
+        // Parent.ApplyConstraintSources(); // -> Silent failure???
     }
 
     protected override void OnUpdate()
@@ -88,6 +96,7 @@ public class ML_UnityConstraintSourceStructuredData
     {
         List<string> infoLines = new List<string>
         {
+            "Id: " + Id,
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
             "Parent ID: " + Parent?.IdString,

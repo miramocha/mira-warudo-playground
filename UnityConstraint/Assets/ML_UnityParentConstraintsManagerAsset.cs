@@ -29,7 +29,7 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 HashSet<string> idSet = new HashSet<string>();
                 foreach (
-                    ML_ConstraintStructuredData structuredData in ML_ConstraintStructuredDataArray.ToList<ML_ConstraintStructuredData>()
+                    ML_UnityParentConstraintStructuredData structuredData in ML_UnityParentConstraintStructuredDataArray.ToList<ML_UnityParentConstraintStructuredData>()
                 )
                 {
                     idSet.Add(structuredData.GameObjectComponentPathID);
@@ -44,9 +44,9 @@ namespace Warudo.Plugins.Scene.Assets
         public async void CreateConstraint()
         {
             // DebugLog("Launching prompt");
-            ML_CreateConstraintPromptStructuredData promptStructuredData =
-                (ML_CreateConstraintPromptStructuredData)(
-                    await Context.Service.PromptStructuredDataInput<ML_CreateConstraintPromptStructuredData>(
+            ML_CreateUnityConstraintPromptStructuredData promptStructuredData =
+                (ML_CreateUnityConstraintPromptStructuredData)(
+                    await Context.Service.PromptStructuredDataInput<ML_CreateUnityConstraintPromptStructuredData>(
                         "Select Asset and Path to Add Constraint"
                     )
                 );
@@ -59,8 +59,8 @@ namespace Warudo.Plugins.Scene.Assets
 
             while (!validatePromptConstraintStructuredData(promptStructuredData))
             {
-                promptStructuredData = (ML_CreateConstraintPromptStructuredData)(
-                    await Context.Service.PromptStructuredDataInput<ML_CreateConstraintPromptStructuredData>(
+                promptStructuredData = (ML_CreateUnityConstraintPromptStructuredData)(
+                    await Context.Service.PromptStructuredDataInput<ML_CreateUnityConstraintPromptStructuredData>(
                         "Select Asset and Path to Add Constraint"
                     )
                 );
@@ -80,10 +80,10 @@ namespace Warudo.Plugins.Scene.Assets
         public void RefreshAllConstraints()
         {
             foreach (
-                ML_ConstraintStructuredData ML_ConstraintStructuredData in ML_ConstraintStructuredDataArray
+                ML_UnityParentConstraintStructuredData ML_UnityParentConstraintStructuredData in ML_UnityParentConstraintStructuredDataArray
             )
             {
-                ML_ConstraintStructuredData.RefreshConstraint();
+                ML_UnityParentConstraintStructuredData.RefreshConstraint();
             }
         }
 
@@ -91,7 +91,7 @@ namespace Warudo.Plugins.Scene.Assets
         [DataInput]
         [Label("Constraints")]
         [Disabled]
-        public ML_ConstraintStructuredData[] ML_ConstraintStructuredDataArray;
+        public ML_UnityParentConstraintStructuredData[] ML_UnityParentConstraintStructuredDataArray;
 
         protected override void OnCreate()
         {
@@ -105,22 +105,22 @@ namespace Warudo.Plugins.Scene.Assets
         }
 
         private void addConstraintStructuredData(
-            ML_CreateConstraintPromptStructuredData promptStructuredData
+            ML_CreateUnityConstraintPromptStructuredData promptStructuredData
         )
         {
-            ML_ConstraintStructuredData structuredData =
-                StructuredData.Create<ML_ConstraintStructuredData>();
+            ML_UnityParentConstraintStructuredData structuredData =
+                StructuredData.Create<ML_UnityParentConstraintStructuredData>();
             structuredData.Asset = promptStructuredData.Asset;
             structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
             structuredData.CreateConstraint();
             structuredData.Parent = this;
 
-            List<ML_ConstraintStructuredData> constraintStructuredDataList =
-                ML_ConstraintStructuredDataArray.ToList();
+            List<ML_UnityParentConstraintStructuredData> constraintStructuredDataList =
+                ML_UnityParentConstraintStructuredDataArray.ToList();
             constraintStructuredDataList.Add(structuredData);
 
             SetDataInput(
-                nameof(ML_ConstraintStructuredDataArray),
+                nameof(ML_UnityParentConstraintStructuredDataArray),
                 constraintStructuredDataList.ToArray(),
                 broadcast: true
             );
@@ -128,7 +128,7 @@ namespace Warudo.Plugins.Scene.Assets
         }
 
         private bool validatePromptConstraintStructuredData(
-            ML_CreateConstraintPromptStructuredData structuredData
+            ML_CreateUnityConstraintPromptStructuredData structuredData
         )
         {
             bool isValid = true;
@@ -161,19 +161,19 @@ namespace Warudo.Plugins.Scene.Assets
         }
 
         public void DeleteConstraintStructuredData(
-            ML_ConstraintStructuredData constraintStructuredData
+            ML_UnityParentConstraintStructuredData constraintStructuredData
         )
         {
             // ML_DebugUtil.ToastDebug("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
-            List<ML_ConstraintStructuredData> constraintStructureDataList =
-                ML_ConstraintStructuredDataArray.ToList();
+            List<ML_UnityParentConstraintStructuredData> constraintStructureDataList =
+                ML_UnityParentConstraintStructuredDataArray.ToList();
             constraintStructureDataList.RemoveAll(current =>
                 current.GameObjectComponentPathID
                 == constraintStructuredData.GameObjectComponentPathID
             );
 
             SetDataInput(
-                nameof(ML_ConstraintStructuredDataArray),
+                nameof(ML_UnityParentConstraintStructuredDataArray),
                 constraintStructureDataList.ToArray(),
                 broadcast: true
             );
@@ -194,7 +194,7 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 "Manager ID: " + IdString,
                 "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
-                "total constraint: " + ML_ConstraintStructuredDataArray.Length,
+                "total constraint: " + ML_UnityParentConstraintStructuredDataArray.Length,
             };
             string newDebugInfo = string.Join("<br>", debugInfoLines);
             SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);

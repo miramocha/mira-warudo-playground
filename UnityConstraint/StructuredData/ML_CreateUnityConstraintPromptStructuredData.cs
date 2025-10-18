@@ -12,7 +12,7 @@ using Warudo.Plugins.Core.Utils;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public class ML_CreateConstraintPromptStructuredData
+public class ML_CreateUnityConstraintPromptStructuredData
     : StructuredData,
         ML_IGameObjectComponentStructuredData
 {
