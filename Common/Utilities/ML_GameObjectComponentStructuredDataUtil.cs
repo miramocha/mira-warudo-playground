@@ -38,7 +38,9 @@ public static class ML_GameObjectComponentStructuredDataUtil
         return Transforms.AutoCompleteTransformChildren(asset.GameObject.transform);
     }
 
-    public static Transform FindTargetTransform(ML_IGameObjectComponentStructuredData structuredData)
+    public static Transform FindTargetTransform(
+        ML_IGameObjectComponentStructuredData structuredData
+    )
     {
         GameObjectAsset asset = structuredData.GetAsset();
         if (asset.IsNullOrInactive())

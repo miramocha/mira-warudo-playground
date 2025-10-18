@@ -9,6 +9,7 @@ using Warudo.Core.Data;
 using Warudo.Core.Data.Models;
 using Warudo.Core.Scenes;
 using Warudo.Core.Server;
+using Warudo.Plugins.Core;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Utils;
 
@@ -20,7 +21,7 @@ namespace Warudo.Plugins.Scene.Assets
         Title = "Unity Parent Constraints Manager",
         Singleton = true
     )]
-    public class UnityParentConstraintsManagerAsset : Asset
+    public class ML_UnityParentConstraintsManagerAsset : Asset
     {
         private HashSet<string> constriantTransformIDSet
         {
@@ -159,23 +160,11 @@ namespace Warudo.Plugins.Scene.Assets
             return isValid;
         }
 
-        // protected override void UpdateDebugInfo()
-        // {
-        // List<string> debugInfoLines = new List<string>
-        // {
-        //     "Manager ID: " + IdString,
-        //     "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
-        //     "total constraint: " + ML_ConstraintStructuredDataArray.Length,
-        // };
-        // string newDebugInfo = string.Join("<br>", debugInfoLines);
-        // SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
-        // }
-
         public void DeleteConstraintStructuredData(
             ML_ConstraintStructuredData constraintStructuredData
         )
         {
-            // DebugToast("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
+            // ML_DebugUtil.ToastDebug("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
             List<ML_ConstraintStructuredData> constraintStructureDataList =
                 ML_ConstraintStructuredDataArray.ToList();
             constraintStructureDataList.RemoveAll(current =>
@@ -189,5 +178,17 @@ namespace Warudo.Plugins.Scene.Assets
                 broadcast: true
             );
         }
+
+        // private void updateDebugInfo()
+        // {
+        //     List<string> debugInfoLines = new List<string>
+        //     {
+        //         "Manager ID: " + IdString,
+        //         "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
+        //         "total constraint: " + ML_ConstraintStructuredDataArray.Length,
+        //     };
+        //     string newDebugInfo = string.Join("<br>", debugInfoLines);
+        //     SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
+        // }
     }
 }

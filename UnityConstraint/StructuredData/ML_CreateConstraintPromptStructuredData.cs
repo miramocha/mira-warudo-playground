@@ -4,6 +4,7 @@ using UnityEngine;
 using Warudo.Core.Attributes;
 using Warudo.Core.Data;
 using Warudo.Core.Utils;
+using Warudo.Plugins.Core;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Assets.Character;
 using Warudo.Plugins.Core.Assets.Environment;

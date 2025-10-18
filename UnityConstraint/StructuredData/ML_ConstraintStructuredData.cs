@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -10,6 +11,7 @@ using Warudo.Core.Data.Models;
 using Warudo.Core.Scenes;
 using Warudo.Core.Server;
 using Warudo.Core.Utils;
+using Warudo.Plugins.Core;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Utils;
 using ParentConstraint = UnityEngine.Animations.ParentConstraint;
@@ -17,7 +19,7 @@ using ParentConstraint = UnityEngine.Animations.ParentConstraint;
 namespace Warudo.Plugins.Scene.Assets;
 
 public class ML_ConstraintStructuredData
-    : StructuredData<UnityParentConstraintsManagerAsset>,
+    : StructuredData<ML_UnityParentConstraintsManagerAsset>,
         ML_IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
@@ -37,10 +39,10 @@ public class ML_ConstraintStructuredData
             "Deleting this constraint?"
         );
 
-        DebugToast("Comfirming Deletion");
+        ML_DebugUtil.ToastDebug("Comfirming Deletion");
         if (confirmed == true)
         {
-            DebugToast("Deletion Confirmed");
+            ML_DebugUtil.ToastDebug("Deletion Confirmed");
             Parent.DeleteConstraintStructuredData(this);
         }
     }
@@ -81,11 +83,18 @@ public class ML_ConstraintStructuredData
 
     [DataInput]
     [Label("Position At Rest")]
+    [HiddenIf(nameof(HideRestTransformEditing))]
     public Vector3 ConstraintPositionAtRest = Vector3.zero;
 
     [DataInput]
     [Label("Rotation At Rest")]
+    [HiddenIf(nameof(HideRestTransformEditing))]
     public Vector3 ConstraintRotationAtRest = Vector3.zero;
+
+    protected bool HideRestTransformEditing()
+    {
+        return !ML_FeatureFlags.PARENT_CONSTRAINT_REST_TRANSFORM_EDITING;
+    }
 
     [Section("Freeze Rotation Axes")]
     [DataInput]
@@ -149,7 +158,7 @@ public class ML_ConstraintStructuredData
     [Section("Constraint Sources")]
     [DataInput]
     [Label("Sources")]
-    public ML_ConstraintSourceStructuredData[] ML_ConstraintSourceStructuredDataList;
+    public ML_UnityConstraintSourceStructuredData[] ML_UnityConstraintSourceStructuredDataList;
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
@@ -167,7 +176,7 @@ public class ML_ConstraintStructuredData
     protected override void OnCreate()
     {
         base.OnCreate();
-        DebugToast("On create");
+        ML_DebugUtil.ToastDebug("On create");
         WatchAsset(
             nameof(Asset),
             delegate
@@ -196,8 +205,8 @@ public class ML_ConstraintStructuredData
                 Constraint.weight = newValue;
             }
         );
-        Watch<ML_ConstraintSourceStructuredData[]>(
-            nameof(ML_ConstraintSourceStructuredDataList),
+        Watch<ML_UnityConstraintSourceStructuredData[]>(
+            nameof(ML_UnityConstraintSourceStructuredDataList),
             delegate
             {
                 ApplyConstraintSources();
@@ -209,12 +218,12 @@ public class ML_ConstraintStructuredData
     {
         if (FindTargetTransform() == null)
         {
-            DebugToast("Transform is null");
+            ML_DebugUtil.ToastDebug("Transform is null");
         }
 
         if (FindTargetTransform() != null && Constraint == null)
         {
-            DebugToast("Adding Constraint");
+            ML_DebugUtil.ToastDebug("Adding Constraint");
             FindTargetTransform().gameObject.AddComponent(typeof(ParentConstraint));
             Constraint.enabled = true;
             Constraint.constraintActive = true;
@@ -226,14 +235,14 @@ public class ML_ConstraintStructuredData
     protected override void OnUpdate()
     {
         base.OnUpdate();
-        updateConstraintDebugInfo();
+        // updateDebugInfo();
     }
 
     protected override void OnDestroy()
     {
         if (Constraint != null)
         {
-            DebugToast("Cleaning up...");
+            ML_DebugUtil.ToastDebug("Cleaning up...");
             originalTransformData.ApplyAsLocalTransform(FindTargetTransform());
             UnityEngine.Object.Destroy((UnityEngine.Object)Constraint);
         }
@@ -246,7 +255,7 @@ public class ML_ConstraintStructuredData
     {
         List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
 
-        if (ML_ConstraintSourceStructuredDataList.Length == 0)
+        if (ML_UnityConstraintSourceStructuredDataList.Length == 0)
         {
             Constraint.SetSources(sources);
             originalTransformData.ApplyAsLocalTransform(Constraint.gameObject.transform);
@@ -254,7 +263,7 @@ public class ML_ConstraintStructuredData
         }
 
         foreach (
-            ML_ConstraintSourceStructuredData sourceStructuredData in ML_ConstraintSourceStructuredDataList
+            ML_UnityConstraintSourceStructuredData sourceStructuredData in ML_UnityConstraintSourceStructuredDataList
         )
         {
             Transform sourceTransform = sourceStructuredData.FindTargetTransform();
@@ -272,23 +281,18 @@ public class ML_ConstraintStructuredData
         Constraint.SetSources(sources);
     }
 
-    private void updateConstraintDebugInfo()
-    {
-        List<string> infoLines = new List<string>
-        {
-            "Asset Id: " + Asset?.IdString,
-            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
-            "Original Transform Data: " + originalTransformData,
-            "Constraint: " + Constraint,
-            "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
-            "Parent ID: " + Parent?.IdString,
-        };
-        string newInfo = string.Join("<br>", infoLines);
-        SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
-    }
-
-    public void DebugToast(string msg)
-    {
-        Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", msg);
-    }
+    // private void updateDebugInfo()
+    // {
+    //     List<string> infoLines = new List<string>
+    //     {
+    //         "Asset Id: " + Asset?.IdString,
+    //         "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
+    //         "Original Transform Data: " + originalTransformData,
+    //         "Constraint: " + Constraint,
+    //         "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
+    //         "Parent ID: " + Parent?.IdString,
+    //     };
+    //     string newInfo = string.Join("<br>", infoLines);
+    //     SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
+    // }
 }

@@ -10,12 +10,13 @@ using Warudo.Core.Data.Models;
 using Warudo.Core.Scenes;
 using Warudo.Core.Server;
 using Warudo.Core.Utils;
+using Warudo.Plugins.Core;
 using Warudo.Plugins.Core.Assets;
 using Warudo.Plugins.Core.Utils;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public class ML_ConstraintSourceStructuredData
+public class ML_UnityConstraintSourceStructuredData
     : StructuredData<ML_ConstraintStructuredData>,
         ML_IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
@@ -80,10 +81,10 @@ public class ML_ConstraintSourceStructuredData
     protected override void OnUpdate()
     {
         base.OnUpdate();
-        updateConstraintDebugInfo();
+        updateDebugInfo();
     }
 
-    private void updateConstraintDebugInfo()
+    private void updateDebugInfo()
     {
         List<string> infoLines = new List<string>
         {
