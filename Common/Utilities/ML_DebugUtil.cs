@@ -4,7 +4,7 @@ namespace Warudo.Plugins.Scene.Assets;
 
 public static class ML_DebugUtil
 {
-    private static bool EnableToast = true;
+    private static bool EnableToast = false;
 
     public static void ToastDebug(string msg)
     {

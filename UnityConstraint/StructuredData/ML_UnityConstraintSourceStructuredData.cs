@@ -66,6 +66,13 @@ public class ML_UnityConstraintSourceStructuredData
     protected override void OnCreate()
     {
         base.OnCreate();
+        WatchAsset(
+            nameof(Asset),
+            delegate
+            {
+                Parent?.ApplyConstraintSources();
+            }
+        );
         WatchAll(
             new[] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) },
             delegate

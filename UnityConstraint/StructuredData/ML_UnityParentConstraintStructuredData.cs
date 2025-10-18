@@ -276,7 +276,9 @@ public class ML_UnityParentConstraintStructuredData
             }
             else
             {
-                ML_DebugUtil.ToastDebug("Source transform not found");
+                ML_DebugUtil.ToastDebug(
+                    "Source transform not found " + sourceStructuredData.Asset.Name
+                );
             }
         }
 
@@ -302,6 +304,7 @@ public class ML_UnityParentConstraintStructuredData
             "Original Transform Data: " + originalTransformData,
             "Constraint: " + Constraint,
             "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
+            "Constraint Source SD: " + UnityConstraintSourceStructuredDataList.Length,
             "Parent ID: " + Parent?.IdString,
         };
         string newInfo = string.Join("<br>", infoLines);
