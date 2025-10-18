@@ -158,7 +158,7 @@ public class ML_ConstraintStructuredData
     [Section("Constraint Sources")]
     [DataInput]
     [Label("Sources")]
-    public ML_UnityConstraintSourceStructuredData[] ML_UnityConstraintSourceStructuredDataList;
+    public ML_UnityConstraintSourceStructuredData[] UnityConstraintSourceStructuredDataList;
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
@@ -169,9 +169,6 @@ public class ML_ConstraintStructuredData
     {
         return ML_GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
-
-    [Markdown]
-    public string ConstraintInfo = "Constraint Info will appear here";
 
     protected override void OnCreate()
     {
@@ -206,7 +203,7 @@ public class ML_ConstraintStructuredData
             }
         );
         Watch<ML_UnityConstraintSourceStructuredData[]>(
-            nameof(ML_UnityConstraintSourceStructuredDataList),
+            nameof(UnityConstraintSourceStructuredDataList),
             delegate
             {
                 ApplyConstraintSources();
@@ -232,12 +229,6 @@ public class ML_ConstraintStructuredData
         }
     }
 
-    protected override void OnUpdate()
-    {
-        base.OnUpdate();
-        // updateDebugInfo();
-    }
-
     protected override void OnDestroy()
     {
         if (Constraint != null)
@@ -255,7 +246,7 @@ public class ML_ConstraintStructuredData
     {
         List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
 
-        if (ML_UnityConstraintSourceStructuredDataList.Length == 0)
+        if (UnityConstraintSourceStructuredDataList.Length == 0)
         {
             Constraint.SetSources(sources);
             originalTransformData.ApplyAsLocalTransform(Constraint.gameObject.transform);
@@ -263,7 +254,7 @@ public class ML_ConstraintStructuredData
         }
 
         foreach (
-            ML_UnityConstraintSourceStructuredData sourceStructuredData in ML_UnityConstraintSourceStructuredDataList
+            ML_UnityConstraintSourceStructuredData sourceStructuredData in UnityConstraintSourceStructuredDataList
         )
         {
             Transform sourceTransform = sourceStructuredData.FindTargetTransform();
@@ -281,18 +272,27 @@ public class ML_ConstraintStructuredData
         Constraint.SetSources(sources);
     }
 
-    // private void updateDebugInfo()
-    // {
-    //     List<string> infoLines = new List<string>
-    //     {
-    //         "Asset Id: " + Asset?.IdString,
-    //         "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
-    //         "Original Transform Data: " + originalTransformData,
-    //         "Constraint: " + Constraint,
-    //         "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
-    //         "Parent ID: " + Parent?.IdString,
-    //     };
-    //     string newInfo = string.Join("<br>", infoLines);
-    //     SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
-    // }
+    protected override void OnUpdate()
+    {
+        base.OnUpdate();
+        updateDebugInfo();
+    }
+
+    [Markdown]
+    public string DebugInfo = "Debug Info will appear here";
+
+    private void updateDebugInfo()
+    {
+        List<string> infoLines = new List<string>
+        {
+            "Asset Id: " + Asset?.IdString,
+            "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
+            "Original Transform Data: " + originalTransformData,
+            "Constraint: " + Constraint,
+            "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
+            "Parent ID: " + Parent?.IdString,
+        };
+        string newInfo = string.Join("<br>", infoLines);
+        SetDataInput(nameof(DebugInfo), newInfo, broadcast: true);
+    }
 }

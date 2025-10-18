@@ -179,16 +179,25 @@ namespace Warudo.Plugins.Scene.Assets
             );
         }
 
-        // private void updateDebugInfo()
-        // {
-        //     List<string> debugInfoLines = new List<string>
-        //     {
-        //         "Manager ID: " + IdString,
-        //         "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
-        //         "total constraint: " + ML_ConstraintStructuredDataArray.Length,
-        //     };
-        //     string newDebugInfo = string.Join("<br>", debugInfoLines);
-        //     SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
-        // }
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            updateDebugInfo();
+        }
+
+        [Markdown]
+        public string DebugInfo = "Debug Info will appear here";
+
+        private void updateDebugInfo()
+        {
+            List<string> debugInfoLines = new List<string>
+            {
+                "Manager ID: " + IdString,
+                "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
+                "total constraint: " + ML_ConstraintStructuredDataArray.Length,
+            };
+            string newDebugInfo = string.Join("<br>", debugInfoLines);
+            SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
+        }
     }
 }

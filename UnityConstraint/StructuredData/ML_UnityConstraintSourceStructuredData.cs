@@ -63,9 +63,6 @@ public class ML_UnityConstraintSourceStructuredData
         get { return ML_GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
 
-    [Markdown]
-    public string ConstraintSourceInfo = "Constraint Info will appear here";
-
     protected override void OnCreate()
     {
         base.OnCreate();
@@ -84,6 +81,9 @@ public class ML_UnityConstraintSourceStructuredData
         updateDebugInfo();
     }
 
+    [Markdown]
+    public string DebugInfo = "Constraint Info will appear here";
+
     private void updateDebugInfo()
     {
         List<string> infoLines = new List<string>
@@ -93,6 +93,6 @@ public class ML_UnityConstraintSourceStructuredData
             "Parent ID: " + Parent?.IdString,
         };
         string newInfo = string.Join("<br>", infoLines);
-        SetDataInput(nameof(ConstraintSourceInfo), newInfo, broadcast: true);
+        SetDataInput(nameof(DebugInfo), newInfo, broadcast: true);
     }
 }
