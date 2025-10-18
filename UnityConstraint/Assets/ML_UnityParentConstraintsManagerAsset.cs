@@ -1,0 +1,203 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using Cysharp.Threading.Tasks;
+using UnityEngine;
+using Warudo.Core;
+using Warudo.Core.Attributes;
+using Warudo.Core.Data;
+using Warudo.Core.Data.Models;
+using Warudo.Core.Scenes;
+using Warudo.Core.Server;
+using Warudo.Plugins.Core;
+using Warudo.Plugins.Core.Assets;
+using Warudo.Plugins.Core.Utils;
+
+namespace Warudo.Plugins.Scene.Assets
+{
+    [AssetType(
+        Id = "mira-unity-parent-constraint-manager",
+        Category = "Unity Constraints",
+        Title = "Unity Parent Constraints Manager",
+        Singleton = true
+    )]
+    public class ML_UnityParentConstraintsManagerAsset : Asset
+    {
+        private HashSet<string> constriantTransformIDSet
+        {
+            get
+            {
+                HashSet<string> idSet = new HashSet<string>();
+                foreach (
+                    ML_UnityParentConstraintStructuredData structuredData in ML_UnityParentConstraintStructuredDataArray.ToList<ML_UnityParentConstraintStructuredData>()
+                )
+                {
+                    idSet.Add(structuredData.GameObjectComponentPathID);
+                }
+
+                return idSet;
+            }
+        }
+
+        [Section("Manage Constraint")]
+        [Trigger]
+        public async void CreateConstraint()
+        {
+            // DebugLog("Launching prompt");
+            ML_CreateUnityConstraintPromptStructuredData promptStructuredData =
+                (ML_CreateUnityConstraintPromptStructuredData)(
+                    await Context.Service.PromptStructuredDataInput<ML_CreateUnityConstraintPromptStructuredData>(
+                        "Select Asset and Path to Add Constraint"
+                    )
+                );
+
+            if (promptStructuredData == null)
+            {
+                // DebugLog("Create Constraint Cancelled");
+                return;
+            }
+
+            while (!validatePromptConstraintStructuredData(promptStructuredData))
+            {
+                promptStructuredData = (ML_CreateUnityConstraintPromptStructuredData)(
+                    await Context.Service.PromptStructuredDataInput<ML_CreateUnityConstraintPromptStructuredData>(
+                        "Select Asset and Path to Add Constraint"
+                    )
+                );
+
+                if (promptStructuredData == null)
+                {
+                    // DebugLog("Create Constraint Cancelled");
+                    return;
+                }
+            }
+
+            // DebugLog("Structured Data Valid");
+            addConstraintStructuredData(promptStructuredData);
+        }
+
+        [Trigger]
+        public void RefreshAllConstraints()
+        {
+            foreach (
+                ML_UnityParentConstraintStructuredData ML_UnityParentConstraintStructuredData in ML_UnityParentConstraintStructuredDataArray
+            )
+            {
+                ML_UnityParentConstraintStructuredData.RefreshConstraint();
+            }
+        }
+
+        [Section("🔗 Active Constraints")]
+        [DataInput]
+        [Label("Constraints")]
+        [Disabled]
+        public ML_UnityParentConstraintStructuredData[] ML_UnityParentConstraintStructuredDataArray;
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+            SetActive(true);
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+        }
+
+        private void addConstraintStructuredData(
+            ML_CreateUnityConstraintPromptStructuredData promptStructuredData
+        )
+        {
+            ML_UnityParentConstraintStructuredData structuredData =
+                StructuredData.Create<ML_UnityParentConstraintStructuredData>();
+            structuredData.Asset = promptStructuredData.Asset;
+            structuredData.GameObjectPath = promptStructuredData.GameObjectPath;
+            structuredData.CreateConstraint();
+            structuredData.Parent = this;
+
+            List<ML_UnityParentConstraintStructuredData> constraintStructuredDataList =
+                ML_UnityParentConstraintStructuredDataArray.ToList();
+            constraintStructuredDataList.Add(structuredData);
+
+            SetDataInput(
+                nameof(ML_UnityParentConstraintStructuredDataArray),
+                constraintStructuredDataList.ToArray(),
+                broadcast: true
+            );
+            structuredData.Broadcast();
+        }
+
+        private bool validatePromptConstraintStructuredData(
+            ML_CreateUnityConstraintPromptStructuredData structuredData
+        )
+        {
+            bool isValid = true;
+            List<string> errorMessages = new List<string>();
+
+            if (structuredData.FindTargetTransform() == null)
+            {
+                isValid = false;
+                // DebugLog("Transform not found");
+                errorMessages.Add("Transform not found!");
+            }
+
+            if (constriantTransformIDSet.Contains(structuredData.GameObjectComponentPathID))
+            {
+                isValid = false;
+                // DebugLog("Constraint already exists!");
+                errorMessages.Add("Constraint already exists!");
+            }
+
+            if (!isValid)
+            {
+                Context.Service.Toast(
+                    ToastSeverity.Error,
+                    "Invalid Input",
+                    string.Join("<br>", errorMessages)
+                );
+            }
+
+            return isValid;
+        }
+
+        public void DeleteConstraintStructuredData(
+            ML_UnityParentConstraintStructuredData constraintStructuredData
+        )
+        {
+            // ML_DebugUtil.ToastDebug("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
+            List<ML_UnityParentConstraintStructuredData> constraintStructureDataList =
+                ML_UnityParentConstraintStructuredDataArray.ToList();
+            constraintStructureDataList.RemoveAll(current =>
+                current.GameObjectComponentPathID
+                == constraintStructuredData.GameObjectComponentPathID
+            );
+
+            SetDataInput(
+                nameof(ML_UnityParentConstraintStructuredDataArray),
+                constraintStructureDataList.ToArray(),
+                broadcast: true
+            );
+        }
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            updateDebugInfo();
+        }
+
+        [Markdown]
+        public string DebugInfo = "Debug Info will appear here";
+
+        private void updateDebugInfo()
+        {
+            List<string> debugInfoLines = new List<string>
+            {
+                "Manager ID: " + IdString,
+                "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
+                "total constraint: " + ML_UnityParentConstraintStructuredDataArray.Length,
+            };
+            string newDebugInfo = string.Join("<br>", debugInfoLines);
+            SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
+        }
+    }
+}
