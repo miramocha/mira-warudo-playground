@@ -16,9 +16,9 @@ using ParentConstraint = UnityEngine.Animations.ParentConstraint;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public class ConstraintStructuredData
+public class ML_ConstraintStructuredData
     : StructuredData<UnityParentConstraintsManagerAsset>,
-        IGameObjectComponentStructuredData,
+        ML_IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
     public string GetHeader() => Asset?.Name + '/' + GameObjectPath;
@@ -143,22 +143,22 @@ public class ConstraintStructuredData
 
     public string GameObjectComponentPathID
     {
-        get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
+        get { return ML_GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
 
     [Section("Constraint Sources")]
     [DataInput]
     [Label("Sources")]
-    public ConstraintSourceStructuredData[] ConstraintSourceStructuredDataList;
+    public ML_ConstraintSourceStructuredData[] ML_ConstraintSourceStructuredDataList;
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
-        return await GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
+        return await ML_GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
     }
 
     public Transform FindTargetTransform()
     {
-        return GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
+        return ML_GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
 
     [Markdown]
@@ -196,8 +196,8 @@ public class ConstraintStructuredData
                 Constraint.weight = newValue;
             }
         );
-        Watch<ConstraintSourceStructuredData[]>(
-            nameof(ConstraintSourceStructuredDataList),
+        Watch<ML_ConstraintSourceStructuredData[]>(
+            nameof(ML_ConstraintSourceStructuredDataList),
             delegate
             {
                 ApplyConstraintSources();
@@ -246,7 +246,7 @@ public class ConstraintStructuredData
     {
         List<UnityEngine.Animations.ConstraintSource> sources = new List<ConstraintSource>();
 
-        if (ConstraintSourceStructuredDataList.Length == 0)
+        if (ML_ConstraintSourceStructuredDataList.Length == 0)
         {
             Constraint.SetSources(sources);
             originalTransformData.ApplyAsLocalTransform(Constraint.gameObject.transform);
@@ -254,7 +254,7 @@ public class ConstraintStructuredData
         }
 
         foreach (
-            ConstraintSourceStructuredData sourceStructuredData in ConstraintSourceStructuredDataList
+            ML_ConstraintSourceStructuredData sourceStructuredData in ML_ConstraintSourceStructuredDataList
         )
         {
             Transform sourceTransform = sourceStructuredData.FindTargetTransform();

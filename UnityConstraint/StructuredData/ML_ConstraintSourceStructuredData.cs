@@ -15,9 +15,9 @@ using Warudo.Plugins.Core.Utils;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public class ConstraintSourceStructuredData
-    : StructuredData<ConstraintStructuredData>,
-        IGameObjectComponentStructuredData,
+public class ML_ConstraintSourceStructuredData
+    : StructuredData<ML_ConstraintStructuredData>,
+        ML_IGameObjectComponentStructuredData,
         ICollapsibleStructuredData
 {
     public string GetHeader() => Asset?.Name + '/' + GameObjectPath;
@@ -49,17 +49,17 @@ public class ConstraintSourceStructuredData
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
-        return await GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
+        return await ML_GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
     }
 
     public Transform FindTargetTransform()
     {
-        return GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
+        return ML_GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
 
     public string GameObjectComponentPathID
     {
-        get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
+        get { return ML_GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
 
     [Markdown]

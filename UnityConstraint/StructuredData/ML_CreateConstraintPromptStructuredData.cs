@@ -11,9 +11,9 @@ using Warudo.Plugins.Core.Utils;
 
 namespace Warudo.Plugins.Scene.Assets;
 
-public class CreateConstraintPromptStructuredData
+public class ML_CreateConstraintPromptStructuredData
     : StructuredData,
-        IGameObjectComponentStructuredData
+        ML_IGameObjectComponentStructuredData
 {
     [DataInput]
     [Label("ASSET")]
@@ -37,16 +37,16 @@ public class CreateConstraintPromptStructuredData
 
     public async UniTask<AutoCompleteList> AutoCompleteGameObjectPath()
     {
-        return await GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
+        return await ML_GameObjectComponentStructuredDataUtil.AutoCompleteGameObjectPath(this);
     }
 
     public Transform FindTargetTransform()
     {
-        return GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
+        return ML_GameObjectComponentStructuredDataUtil.FindTargetTransform(this);
     }
 
     public string GameObjectComponentPathID
     {
-        get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
+        get { return ML_GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
 }
