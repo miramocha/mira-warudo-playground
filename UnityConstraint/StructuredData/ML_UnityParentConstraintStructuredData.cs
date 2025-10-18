@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -208,6 +209,26 @@ public class ML_UnityParentConstraintStructuredData
             {
                 ML_DebugUtil.ToastDebug("Parent source change received.");
                 ApplyConstraintSources();
+            }
+        );
+        WatchAll(
+            new[] { nameof(FreezePositionX), nameof(FreezePositionY), nameof(FreezePositionZ) },
+            delegate
+            {
+                if (Constraint != null)
+                {
+                    Constraint.translationAxis = FreezePositionAxes;
+                }
+            }
+        );
+        WatchAll(
+            new[] { nameof(FreezeRotationX), nameof(FreezeRotationY), nameof(FreezeRotationZ) },
+            delegate
+            {
+                if (Constraint != null)
+                {
+                    Constraint.rotationAxis = FreezeRotationAxes;
+                }
             }
         );
     }
