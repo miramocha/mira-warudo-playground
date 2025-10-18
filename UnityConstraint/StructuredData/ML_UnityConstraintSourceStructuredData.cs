@@ -70,7 +70,7 @@ public class ML_UnityConstraintSourceStructuredData
             new[] { nameof(Asset), nameof(GameObjectPath), nameof(Weight) },
             delegate
             {
-                // ML_DebugUtil.ToastDebug("Source changed, Parent: " + Parent.IdString);
+                ML_DebugUtil.ToastDebug("Source attribute changed, Parent: " + Parent.IdString);
                 Parent?.ApplyConstraintSources();
             }
         );

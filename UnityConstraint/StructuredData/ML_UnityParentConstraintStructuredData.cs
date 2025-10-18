@@ -206,7 +206,7 @@ public class ML_UnityParentConstraintStructuredData
             nameof(UnityConstraintSourceStructuredDataList),
             delegate
             {
-                // ML_DebugUtil.ToastDebug("Parent source change received.");
+                ML_DebugUtil.ToastDebug("Parent source change received.");
                 ApplyConstraintSources();
             }
         );
@@ -217,6 +217,7 @@ public class ML_UnityParentConstraintStructuredData
         if (FindTargetTransform() == null)
         {
             ML_DebugUtil.ToastDebug("Transform is null");
+            return;
         }
 
         if (FindTargetTransform() != null && Constraint == null)
@@ -256,6 +257,8 @@ public class ML_UnityParentConstraintStructuredData
             return;
         }
 
+        ML_DebugUtil.ToastDebug("Source list is NOT empty");
+
         foreach (
             ML_UnityConstraintSourceStructuredData sourceStructuredData in UnityConstraintSourceStructuredDataList
         )
@@ -264,11 +267,16 @@ public class ML_UnityParentConstraintStructuredData
 
             if (sourceTransform != null)
             {
+                ML_DebugUtil.ToastDebug("Adding source to list");
                 UnityEngine.Animations.ConstraintSource source =
                     new UnityEngine.Animations.ConstraintSource();
                 source.weight = sourceStructuredData.Weight;
                 source.sourceTransform = sourceTransform;
                 sources.Add(source);
+            }
+            else
+            {
+                ML_DebugUtil.ToastDebug("Source transform not found");
             }
         }
 

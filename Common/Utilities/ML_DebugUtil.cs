@@ -10,7 +10,11 @@ public static class ML_DebugUtil
     {
         if (EnableToast)
         {
-            Context.Service.Toast(Warudo.Core.Server.ToastSeverity.Info, "Debug", msg);
+            Context.Service.Toast(
+                Warudo.Core.Server.ToastSeverity.Info,
+                "Debug " + System.DateTime.Now.ToString("hh:mm:ss.fff"),
+                msg
+            );
         }
     }
 }
