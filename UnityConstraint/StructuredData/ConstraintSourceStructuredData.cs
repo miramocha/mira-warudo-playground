@@ -87,7 +87,6 @@ public class ConstraintSourceStructuredData
     {
         List<string> infoLines = new List<string>
         {
-            "Entity Id: " + Id,
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
             "Parent ID: " + Parent?.IdString,

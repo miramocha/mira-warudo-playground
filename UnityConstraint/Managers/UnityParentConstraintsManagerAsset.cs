@@ -20,7 +20,7 @@ namespace Warudo.Plugins.Scene.Assets
         Title = "Unity Parent Constraints Manager",
         Singleton = true
     )]
-    public class UnityParentConstraintsManagerAsset : ADebuggableAsset
+    public class UnityParentConstraintsManagerAsset : Asset
     {
         private HashSet<string> constriantTransformIDSet
         {
@@ -42,7 +42,7 @@ namespace Warudo.Plugins.Scene.Assets
         [Trigger]
         public async void CreateConstraint()
         {
-            DebugLog("Launching prompt");
+            // DebugLog("Launching prompt");
             CreateConstraintPromptStructuredData promptStructuredData =
                 (CreateConstraintPromptStructuredData)(
                     await Context.Service.PromptStructuredDataInput<CreateConstraintPromptStructuredData>(
@@ -52,7 +52,7 @@ namespace Warudo.Plugins.Scene.Assets
 
             if (promptStructuredData == null)
             {
-                DebugLog("Create Constraint Cancelled");
+                // DebugLog("Create Constraint Cancelled");
                 return;
             }
 
@@ -66,25 +66,25 @@ namespace Warudo.Plugins.Scene.Assets
 
                 if (promptStructuredData == null)
                 {
-                    DebugLog("Create Constraint Cancelled");
+                    // DebugLog("Create Constraint Cancelled");
                     return;
                 }
             }
 
-            DebugLog("Structured Data Valid");
+            // DebugLog("Structured Data Valid");
             addConstraintStructuredData(promptStructuredData);
         }
 
-        // [Trigger]
-        // public void RefreshAllConstraints()
-        // {
-        //     foreach (
-        //         ConstraintStructuredData ConstraintStructuredData in ConstraintStructuredDataArray
-        //     )
-        //     {
-        //         ConstraintStructuredData.RefreshConstraint();
-        //     }
-        // }
+        [Trigger]
+        public void RefreshAllConstraints()
+        {
+            foreach (
+                ConstraintStructuredData ConstraintStructuredData in ConstraintStructuredDataArray
+            )
+            {
+                ConstraintStructuredData.RefreshConstraint();
+            }
+        }
 
         [Section("🔗 Active Constraints")]
         [DataInput]
@@ -136,14 +136,14 @@ namespace Warudo.Plugins.Scene.Assets
             if (structuredData.FindTargetTransform() == null)
             {
                 isValid = false;
-                DebugLog("Transform not found");
+                // DebugLog("Transform not found");
                 errorMessages.Add("Transform not found!");
             }
 
             if (constriantTransformIDSet.Contains(structuredData.GameObjectComponentPathID))
             {
                 isValid = false;
-                DebugLog("Constraint already exists!");
+                // DebugLog("Constraint already exists!");
                 errorMessages.Add("Constraint already exists!");
             }
 
@@ -159,23 +159,23 @@ namespace Warudo.Plugins.Scene.Assets
             return isValid;
         }
 
-        protected override void UpdateDebugInfo()
-        {
-            List<string> debugInfoLines = new List<string>
-            {
-                "Manager ID: " + IdString,
-                "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
-                "total constraint: " + ConstraintStructuredDataArray.Length,
-            };
-            string newDebugInfo = string.Join("<br>", debugInfoLines);
-            SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
-        }
+        // protected override void UpdateDebugInfo()
+        // {
+        // List<string> debugInfoLines = new List<string>
+        // {
+        //     "Manager ID: " + IdString,
+        //     "transformIDSet: [" + string.Join("/", constriantTransformIDSet) + "]",
+        //     "total constraint: " + ConstraintStructuredDataArray.Length,
+        // };
+        // string newDebugInfo = string.Join("<br>", debugInfoLines);
+        // SetDataInput(nameof(DebugInfo), newDebugInfo, broadcast: true);
+        // }
 
         public void DeleteConstraintStructuredData(
             ConstraintStructuredData constraintStructuredData
         )
         {
-            DebugToast("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
+            // DebugToast("Deleting: " + constraintStructuredData.GameObjectComponentPathID);
             List<ConstraintStructuredData> constraintStructureDataList =
                 ConstraintStructuredDataArray.ToList();
             constraintStructureDataList.RemoveAll(current =>

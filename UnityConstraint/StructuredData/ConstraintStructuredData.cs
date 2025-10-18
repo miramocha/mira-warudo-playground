@@ -46,27 +46,11 @@ public class ConstraintStructuredData
     }
 
     [Trigger]
-    [Label("Reset Rest Transform")]
-    [HiddenIf(nameof(HideRestTransformInput))]
-    public void ResetRestTransform()
+    [Label("Refresh")]
+    public void RefreshConstraint()
     {
-        if (!HideRestTransformInput())
-        {
-            ConstraintPositionAtRest = OriginalRestTransformData.Position;
-            ConstraintRotationAtRest = OriginalRestTransformData.Rotation;
-            Constraint.translationAtRest = ConstraintPositionAtRest;
-            Constraint.rotationAtRest = ConstraintRotationAtRest;
-            Broadcast();
-        }
+        CreateConstraint();
     }
-
-    public void ResetTransform()
-    {
-        OriginalTransformData.ApplyAsLocalTransform(FindTargetTransform());
-    }
-
-    [DataInput]
-    public string GroupName = "Default";
 
     [DataInput]
     [Label("ASSET")]
@@ -97,19 +81,11 @@ public class ConstraintStructuredData
 
     [DataInput]
     [Label("Position At Rest")]
-    [HiddenIf(nameof(HideRestTransformInput))]
     public Vector3 ConstraintPositionAtRest = Vector3.zero;
 
     [DataInput]
     [Label("Rotation At Rest")]
-    [HiddenIf(nameof(HideRestTransformInput))]
     public Vector3 ConstraintRotationAtRest = Vector3.zero;
-
-    // TO DO: Fix this
-    protected bool HideRestTransformInput()
-    {
-        return true;
-    }
 
     [Section("Freeze Rotation Axes")]
     [DataInput]
@@ -170,7 +146,7 @@ public class ConstraintStructuredData
         get { return GameObjectComponentStructuredDataUtil.GetGameObjectComponentPathID(this); }
     }
 
-    [Section("Constraint Sources", UnityConstraintUIOrdering.WEIGHT_INPUT + 1)]
+    [Section("Constraint Sources")]
     [DataInput]
     [Label("Sources")]
     public ConstraintSourceStructuredData[] ConstraintSourceStructuredDataList;
@@ -192,20 +168,6 @@ public class ConstraintStructuredData
     {
         base.OnCreate();
         DebugToast("On create");
-        WatchAll(
-            new[] { nameof(FreezePositionX), nameof(FreezePositionY), nameof(FreezePositionZ) },
-            delegate
-            {
-                Constraint.translationAxis = FreezePositionAxes;
-            }
-        );
-        WatchAll(
-            new[] { nameof(FreezeRotationX), nameof(FreezeRotationY), nameof(FreezeRotationZ) },
-            delegate
-            {
-                Constraint.rotationAxis = FreezeRotationAxes;
-            }
-        );
         WatchAsset(
             nameof(Asset),
             delegate
@@ -227,7 +189,6 @@ public class ConstraintStructuredData
                 CreateConstraint();
             }
         );
-
         Watch<float>(
             nameof(Weight),
             delegate(float oldValue, float newValue)
@@ -239,28 +200,9 @@ public class ConstraintStructuredData
             nameof(ConstraintSourceStructuredDataList),
             delegate
             {
-                DebugToast("Source changed");
                 ApplyConstraintSources();
             }
         );
-
-        if (!HideRestTransformInput())
-        {
-            Watch<Vector3>(
-                nameof(ConstraintPositionAtRest),
-                delegate(Vector3 oldValue, Vector3 newValue)
-                {
-                    Constraint.translationAtRest = ConstraintPositionAtRest;
-                }
-            );
-            Watch<Vector3>(
-                nameof(ConstraintRotationAtRest),
-                delegate(Vector3 oldValue, Vector3 newValue)
-                {
-                    Constraint.rotationAtRest = ConstraintRotationAtRest;
-                }
-            );
-        }
     }
 
     public void CreateConstraint()
@@ -269,20 +211,14 @@ public class ConstraintStructuredData
         {
             DebugToast("Transform is null");
         }
-        OriginalTransformData.CopyFromLocalTransform(FindTargetTransform());
 
         if (FindTargetTransform() != null && Constraint == null)
         {
             DebugToast("Adding Constraint");
-
             FindTargetTransform().gameObject.AddComponent(typeof(ParentConstraint));
             Constraint.enabled = true;
             Constraint.constraintActive = true;
-            OriginalRestTransformData.CopyFromLocalTransform(Constraint.gameObject.transform);
-
-            ConstraintPositionAtRest = Constraint.translationAtRest;
-            ConstraintRotationAtRest = Constraint.rotationAtRest;
-            Broadcast();
+            originalTransformData.CopyFromLocalTransform(FindTargetTransform());
             ApplyConstraintSources();
         }
     }
@@ -298,22 +234,13 @@ public class ConstraintStructuredData
         if (Constraint != null)
         {
             DebugToast("Cleaning up...");
-            ResetRestTransform();
+            originalTransformData.ApplyAsLocalTransform(FindTargetTransform());
             UnityEngine.Object.Destroy((UnityEngine.Object)Constraint);
-            ResetTransform();
         }
         base.OnDestroy();
     }
 
-    [DataInput]
-    [Hidden]
-    [Disabled]
-    protected TransformData OriginalTransformData = StructuredData.Create<TransformData>();
-
-    // [DataInput]
-    // [Hidden]
-    // [Disabled]
-    protected TransformData OriginalRestTransformData = StructuredData.Create<TransformData>();
+    private TransformData originalTransformData = StructuredData.Create<TransformData>();
 
     public void ApplyConstraintSources()
     {
@@ -322,8 +249,7 @@ public class ConstraintStructuredData
         if (ConstraintSourceStructuredDataList.Length == 0)
         {
             Constraint.SetSources(sources);
-            ResetRestTransform();
-            ResetTransform();
+            originalTransformData.ApplyAsLocalTransform(Constraint.gameObject.transform);
             return;
         }
 
@@ -350,25 +276,13 @@ public class ConstraintStructuredData
     {
         List<string> infoLines = new List<string>
         {
-            "Entity Id: " + Id,
             "Asset Id: " + Asset?.IdString,
             "GameObject Id: " + FindTargetTransform()?.gameObject.GetInstanceID(),
-            "Original Transform Data: " + OriginalTransformData,
+            "Original Transform Data: " + originalTransformData,
             "Constraint: " + Constraint,
             "Constrant Source Count: " + (Constraint?.sourceCount ?? 0),
             "Parent ID: " + Parent?.IdString,
         };
-
-        if (!HideRestTransformInput())
-        {
-            infoLines.AddRange(
-                new List<string>
-                {
-                    "Rest Position: " + ConstraintPositionAtRest,
-                    "Rest Rotation: " + ConstraintRotationAtRest,
-                }
-            );
-        }
         string newInfo = string.Join("<br>", infoLines);
         SetDataInput(nameof(ConstraintInfo), newInfo, broadcast: true);
     }
