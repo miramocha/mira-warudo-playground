@@ -27,7 +27,7 @@ public static class ML_GameObjectComponentStructuredDataUtil
 
         if (asset is EnvironmentAsset environmentAsset)
         {
-            return environmentAsset.AutoCompleteGameObjectPath();
+            return Transforms.AutoCompleteTransformChildren(environmentAsset.GameObject.transform);
         }
 
         if (asset is CharacterAsset characterAsset)
