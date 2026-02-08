@@ -58,22 +58,21 @@ namespace Warudo.Plugins.Scene.Assets
         }
 
         private WebSocketSharp.WebSocket ws;
-        private Quaternion trackerOrientation = Quaternion.identity;
+        private Vector3 trackerOrientation = Vector3.zero;
 
         private void StartConnection()
         {
             ws = new WebSocketSharp.WebSocket(
-                "ws://Pixel-9a.attlocal.net:5555/sensor/connect?type=android.sensor.game_rotation_vector"
+                "ws://Pixel-9a.attlocal.net:5555/sensor/connect?type=android.sensor.orientation"
             );
             ws.OnMessage += (sender, e) =>
             {
                 SetDataInput(nameof(DebugInfo), "Received Sensor Data: " + e.Data, broadcast: true);
                 SensorData sensorData = JsonConvert.DeserializeObject<SensorData>(e.Data);
-                this.trackerOrientation = new Quaternion(
+                this.trackerOrientation = new Vector3(
                     sensorData.value[0],
                     sensorData.value[1],
-                    sensorData.value[2],
-                    sensorData.value[3]
+                    sensorData.value[2]
                 );
             };
             ws.Connect();
@@ -96,12 +95,12 @@ namespace Warudo.Plugins.Scene.Assets
 
             if (!this.SmoothRotation)
             {
-                this.Asset.Transform.RotationQuaternion = this.trackerOrientation;
+                this.Asset.Transform.Rotation = this.trackerOrientation;
                 return;
             }
 
-            this.Asset.Transform.RotationQuaternion = Quaternion.Slerp(
-                this.Asset.Transform.RotationQuaternion,
+            this.Asset.Transform.Rotation = Vector3.Slerp(
+                this.Asset.Transform.Rotation,
                 this.trackerOrientation,
                 Time.deltaTime * 10f
             );
