@@ -10,8 +10,8 @@ using Warudo.Plugins.Core.Assets;
 
 namespace Warudo.Plugins.Scene.Assets
 {
-    [AssetType(Id = "ml-shader-updater", Category = "Shader", Title = "ML Shader Updater")]
-    public class ML_ShaderUpdaterAsset : Asset
+    [AssetType(Id = "ml-shader-controller", Category = "Shader", Title = "ML Shader Controller")]
+    public class MLS_ShaderControllerAsset : Asset
     {
         [DataInput]
         [Label("ASSET")]
@@ -44,10 +44,27 @@ namespace Warudo.Plugins.Scene.Assets
             {
                 foreach (Material mat in renderer.materials)
                 {
-                    if (mat.HasProperty("_Dissolve_Cutoff_Height_Start"))
-                    {
-                        mat.SetFloat("_Dissolve_Cutoff_Height_Start", rootTransform.position.y);
-                    }
+                    // if (mat.HasProperty("_Dissolve_Mask_Cutoff_Height_Start"))
+                    // {
+                    //     mat.SetFloat("_Dissolve_Mask_Cutoff_Height_Start", 0);
+                    // }
+
+                    // if (mat.HasProperty("_Dissolve_Mask_Use_YY_UV"))
+                    // {
+                    //     mat.SetFloat("_Dissolve_Mask_Use_YY_UV", 0f);
+                    // }
+
+
+                    // if (mat.HasProperty("_Dissolve_Mask_Noise_Scale"))
+                    // {
+                    //     mat.SetFloat("_Dissolve_Mask_Noise_Scale", 30);
+                    // }
+
+
+                    // if (mat.HasProperty("_Water_Opacity"))
+                    // {
+                    //     mat.SetFloat("_Water_Opacity", 0.95f);
+                    // }
                 }
             }
         }
