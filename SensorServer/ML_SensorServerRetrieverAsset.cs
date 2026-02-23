@@ -66,6 +66,10 @@ namespace Warudo.Plugins.Scene.Assets
         [Label("Calculate Position")]
         public bool CalculatePosition = false;
 
+        [DataInput]
+        [Label("Update")]
+        public bool UpdateAsset = false;
+
         public string BaseWebSocketURL = "ws://Pixel-9a.attlocal.net:5555/sensor/connect?type=";
 
         [Markdown]
@@ -79,6 +83,10 @@ namespace Warudo.Plugins.Scene.Assets
         [Markdown]
         [Label("Linear Acceleration Info")]
         public string LinearAccelerationInfo = "Linear Acceleration Info will appear here";
+
+        [Markdown]
+        [Label("Calibrated Acceleration Info")]
+        public string CalibratedAccelerationInfo = "Calibrated Acceleration Info will appear here";
 
         protected override void OnCreate()
         {
@@ -100,13 +108,41 @@ namespace Warudo.Plugins.Scene.Assets
         private SensorData oritenationData = new SensorData();
         private SensorData gameRotationVectorData = new SensorData();
         private SensorData linearAccelerationData = new SensorData();
-        private Vector3 velocity = Vector3.zero;
 
         [Trigger]
         public void Reconnect()
         {
             Disconnect();
             Connect();
+        }
+
+        private bool isCalibrated = false;
+        private Vector3 linearAccelerationAtRest = Vector3.zero;
+        private Vector3 velocity = Vector3.zero;
+
+        private Vector3 getCalibratedLinearAcceleration()
+        {
+            if (!isCalibrated)
+            {
+                return Vector3.zero;
+            }
+
+            return this.linearAccelerationData.GetDataAsVector3() - this.linearAccelerationAtRest;
+        }
+
+        [Trigger]
+        public void Calibrate()
+        {
+            this.isCalibrated = true;
+            this.velocity = Vector3.zero;
+            linearAccelerationAtRest = this.linearAccelerationData.GetDataAsVector3();
+
+            if (this.Asset == null)
+            {
+                return;
+            }
+
+            this.Asset.Transform.Position = Vector3.zero;
         }
 
         private void Disconnect()
@@ -125,7 +161,7 @@ namespace Warudo.Plugins.Scene.Assets
             orientationWebSocket.OnMessage += (sender, e) =>
             {
                 this.oritenationData = JsonConvert.DeserializeObject<SensorData>(e.Data);
-                SetDataInput(nameof(OrientationInfo), e.Data, broadcast: true);
+                // SetDataInput(nameof(OrientationInfo), e.Data, broadcast: true);
             };
             orientationWebSocket.Connect();
 
@@ -135,7 +171,7 @@ namespace Warudo.Plugins.Scene.Assets
             gameRotationVectorWebSocket.OnMessage += (sender, e) =>
             {
                 this.gameRotationVectorData = JsonConvert.DeserializeObject<SensorData>(e.Data);
-                SetDataInput(nameof(GameRotationVectorInfo), e.Data, broadcast: true);
+                // SetDataInput(nameof(GameRotationVectorInfo), e.Data, broadcast: true);
             };
             gameRotationVectorWebSocket.Connect();
 
@@ -145,6 +181,7 @@ namespace Warudo.Plugins.Scene.Assets
             linearAccelerationWebSocket.OnMessage += (sender, e) =>
             {
                 this.linearAccelerationData = JsonConvert.DeserializeObject<SensorData>(e.Data);
+
                 SetDataInput(nameof(LinearAccelerationInfo), e.Data, broadcast: true);
             };
             linearAccelerationWebSocket.Connect();
@@ -152,6 +189,11 @@ namespace Warudo.Plugins.Scene.Assets
 
         public override void OnFixedUpdate()
         {
+            if (!this.UpdateAsset)
+            {
+                return;
+            }
+
             if (this.Asset == null)
             {
                 return;
@@ -172,13 +214,30 @@ namespace Warudo.Plugins.Scene.Assets
                 this.updateWithOrientation();
             }
 
+            this.velocity =
+                this.velocity
+                + new Vector3(
+                    (float)
+                        System.Math.Round(
+                            this.getCalibratedLinearAcceleration().x * Time.fixedDeltaTime / 10f,
+                            3
+                        ),
+                    (float)
+                        System.Math.Round(
+                            this.getCalibratedLinearAcceleration().y * Time.fixedDeltaTime / 10f,
+                            3
+                        ),
+                    (float)
+                        System.Math.Round(
+                            this.getCalibratedLinearAcceleration().z * Time.fixedDeltaTime / 10f,
+                            3
+                        )
+                );
+
             if (this.CalculatePosition)
             {
-                this.velocity =
-                    this.velocity
-                    + this.linearAccelerationData.GetDataAsVector3() * Time.fixedDeltaTime / 100f;
                 this.Asset.Transform.Position =
-                    this.Asset.Transform.Position + this.velocity * Time.fixedDeltaTime;
+                    this.Asset.Transform.Position + (this.velocity * Time.fixedDeltaTime);
             }
         }
 
