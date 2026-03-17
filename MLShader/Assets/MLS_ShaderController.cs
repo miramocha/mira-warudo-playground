@@ -34,6 +34,10 @@ namespace Warudo.Plugins.Scene.Assets
 
         [Section("Global Lighting Settings")]
         [DataInput]
+        [Label("Global Lighting Circle Diameter Offset")]
+        public float GlobalLightingCircleDiameterOffset = 0f;
+
+        [DataInput]
         [Label("Global Lighting Circle Offset")]
         public Vector2 GlobalLightingCircleOffset = Vector2.zero;
 
@@ -74,6 +78,22 @@ namespace Warudo.Plugins.Scene.Assets
         [FloatSlider(-1, 1)]
         public float GlobalWaterOpacityOffset = 1f;
 
+        [Section("Post Processing")]
+        [DataInput]
+        [Label("Non-Emissive Hue Shift")]
+        [FloatSlider(-1, 1)]
+        public float NonEmissiveHueShift = 0f;
+
+        [DataInput]
+        [Label("Non-Emissive Saturation Shift")]
+        [FloatSlider(-1, 1)]
+        public float NonEmissiveSaturationShift = 0f;
+
+        [DataInput]
+        [Label("Non-Emissive Lightness Shift")]
+        [FloatSlider(-1, 1)]
+        public float NonEmissiveLightnessShift = 0f;
+
         protected override void OnCreate()
         {
             base.OnCreate();
@@ -102,11 +122,16 @@ namespace Warudo.Plugins.Scene.Assets
             WatchAll(
                 new[]
                 {
+                    nameof(GlobalLightingCircleDiameterOffset),
                     nameof(GlobalLightingCircleOffset),
                     nameof(GlobalLightingCircleEdgeMinMaxOffset),
                 },
                 () =>
                 {
+                    Shader.SetGlobalFloat(
+                        "_Global_Lighting_Circle_Diameter_Offset",
+                        this.GlobalLightingCircleDiameterOffset
+                    );
                     Shader.SetGlobalVector(
                         "_Global_Lighting_Circle_Offset",
                         this.GlobalLightingCircleOffset
@@ -168,6 +193,26 @@ namespace Warudo.Plugins.Scene.Assets
                     Shader.SetGlobalVector(
                         "_Global_Lighting_Circle_Offset",
                         new Vector2(2 * s - 0.5f, 2 * v - 0.5f)
+                    );
+                }
+            );
+            WatchAll(
+                new[]
+                {
+                    nameof(NonEmissiveHueShift),
+                    nameof(NonEmissiveSaturationShift),
+                    nameof(NonEmissiveLightnessShift),
+                },
+                () =>
+                {
+                    Shader.SetGlobalFloat("_Non_Emissive_Hue_Shift", this.NonEmissiveHueShift);
+                    Shader.SetGlobalFloat(
+                        "_Non_Emissive_Saturation_Shift",
+                        this.NonEmissiveSaturationShift
+                    );
+                    Shader.SetGlobalFloat(
+                        "_Non_Emissive_Lightness_Shift",
+                        this.NonEmissiveLightnessShift
                     );
                 }
             );
