@@ -34,6 +34,14 @@ namespace Warudo.Plugins.Scene.Assets
 
         [Section("Global Lighting Settings")]
         [DataInput]
+        [Label("Enable Directional Light")]
+        public bool EnableDirectionalLight = false;
+
+        [DataInput]
+        [Label("Enable Light")]
+        public bool EnableLight = false;
+
+        [DataInput]
         [Label("Global Lighting Circle Diameter Offset")]
         public float GlobalLightingCircleDiameterOffset = 0f;
 
@@ -122,12 +130,19 @@ namespace Warudo.Plugins.Scene.Assets
             WatchAll(
                 new[]
                 {
+                    nameof(EnableDirectionalLight),
+                    nameof(EnableLight),
                     nameof(GlobalLightingCircleDiameterOffset),
                     nameof(GlobalLightingCircleOffset),
                     nameof(GlobalLightingCircleEdgeMinMaxOffset),
                 },
                 () =>
                 {
+                    Shader.SetGlobalFloat(
+                        "_Enable_Directional_Light",
+                        this.EnableDirectionalLight ? 1f : 0f
+                    );
+                    Shader.SetGlobalFloat("_Enable_Light", this.EnableLight ? 1f : 0f);
                     Shader.SetGlobalFloat(
                         "_Global_Lighting_Circle_Diameter_Offset",
                         this.GlobalLightingCircleDiameterOffset
