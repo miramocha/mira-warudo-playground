@@ -10,7 +10,7 @@ namespace Warudo.Plugins.Core.Nodes;
     Title = "TRANSITION_EASING",
     Category = "CATEGORY_LITERALS"
 )]
-public class LiteralVector3ListNode : Node
+public class EaseLiteralNode : Node
 {
     [DataInput(9)]
     [Label("Value")]
